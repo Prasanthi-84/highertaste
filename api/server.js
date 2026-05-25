@@ -23,11 +23,19 @@ if (process.env.NODE_ENV !== 'production') {
 
 // ─── Core Middleware ───────────────────────────────────────────────────────
 app.use(cors({
-    origin: [
-        'https://catering-ops-hub--jamimani19.replit.app',
-        'http://localhost:3000',
-        'http://localhost:5173',
-    ],
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            process.env.FRONTEND_URL,
+        ].filter(Boolean);
+        // Allow requests with no origin (mobile apps, curl, etc.) and any vercel.app domain
+        if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all origins for now; tighten in production
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
