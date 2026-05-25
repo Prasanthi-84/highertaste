@@ -9,8 +9,12 @@ import { logOut } from "./authSlice";
 
 // Use relative URL so Vite proxy handles it in dev (prevents CORS errors).
 // The Vite proxy in vite.config.ts forwards /api → http://localhost:5000
-const baseUrl = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
+// Trim trailing slashes from VITE_API_URL to prevent double slashes like //api
+const rawViteApiUrl = import.meta.env.VITE_API_URL;
+const viteApiUrl = rawViteApiUrl ? rawViteApiUrl.replace(/\/+$/, '') : null;
+
+const baseUrl = viteApiUrl
+  ? `${viteApiUrl}/api`
   : "/api";
 
 const rawBaseQuery = fetchBaseQuery({
