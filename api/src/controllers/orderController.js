@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const generateNumber = require('../utils/generateNumber');
 const { createError } = require('../middleware/errorHandler');
-const { sendOrderConfirmation, sendStatusUpdate } = require('../services/whatsappService');
+const { sendWhatsAppMessage } = require('../services/whatsappService');
 const logger = require('../utils/logger');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,10 +90,13 @@ const createOrder = async (req, res, next) => {
         const orderNumber = await generateNumber('ORD', Order);
 
         // Calculate financials
-        const subTotal = (lineItems || []).reduce((sum, item) => sum + item.total, 0);
-        const tax = taxRate ?? 18;
+        const subTotal = (lineItems || []).reduce((sum, item) => {
+            const itemTotal = parseFloat(item.total) || 0;
+            return sum + itemTotal;
+        }, 0);
+        const tax = parseFloat(taxRate) || 18;
         const taxAmount = parseFloat(((subTotal * tax) / 100).toFixed(2));
-        const discount = discountAmount || 0;
+        const discount = parseFloat(discountAmount) || 0;
         const totalAmount = parseFloat((subTotal + taxAmount - discount).toFixed(2));
 
         const order = await Order.create({
@@ -122,11 +125,19 @@ const createOrder = async (req, res, next) => {
 
         const populated = await order.populate('customerId', 'name company phone email');
 
-        // 🔥 TRIGGER WHATSAPP CONFIRMATION
+        // 🔥 TRIGGER WHATSAPP ORDER CREATED
         try {
-            await sendOrderConfirmation(populated);
+            await sendWhatsAppMessage({
+                to: populated.customerId.phone,
+                templateName: 'order_created',
+                variables: [
+                    populated.customerId.name,
+                    populated.orderNumber,
+                    new Date(populated.eventDate).toLocaleDateString('en-IN')
+                ]
+            });
         } catch (err) {
-            logger.error(`[Order Conf WhatsApp] Failed: ${err.message}`);
+            logger.error(`[Order Created WhatsApp] Failed: ${err.message}`);
         }
 
         res.status(201).json({
@@ -180,10 +191,13 @@ const updateOrder = async (req, res, next) => {
         if (updates.lineItems || updates.taxRate !== undefined) {
             const existingOrder = await Order.findById(req.params.id);
             const lineItems = updates.lineItems || existingOrder.lineItems;
-            const taxRate = updates.taxRate !== undefined ? updates.taxRate : existingOrder.taxRate;
-            const discount = updates.discountAmount !== undefined ? updates.discountAmount : existingOrder.discountAmount;
+            const taxRate = parseFloat(updates.taxRate !== undefined ? updates.taxRate : existingOrder.taxRate) || 0;
+            const discount = parseFloat(updates.discountAmount !== undefined ? updates.discountAmount : existingOrder.discountAmount) || 0;
 
-            updates.subTotal = lineItems.reduce((sum, item) => sum + item.total, 0);
+            updates.subTotal = (lineItems || []).reduce((sum, item) => {
+                const itemTotal = parseFloat(item.total) || 0;
+                return sum + itemTotal;
+            }, 0);
             updates.taxAmount = parseFloat(((updates.subTotal * taxRate) / 100).toFixed(2));
             updates.discountAmount = discount;
             updates.totalAmount = parseFloat((updates.subTotal + updates.taxAmount - discount).toFixed(2));
@@ -232,9 +246,21 @@ const updateOrderStatus = async (req, res, next) => {
         if (!order) return next(createError(404, 'Order not found'));
 
         // 🔥 TRIGGER WHATSAPP STATUS UPDATE
-        if (status || kitchenStatus) {
+        if (status) {
             try {
-                await sendStatusUpdate(order, status || kitchenStatus);
+                if (status === 'Dispatched') {
+                    await sendWhatsAppMessage({
+                        to: order.customerId.phone,
+                        templateName: 'order_dispatched',
+                        variables: [order.customerId.name, order.orderNumber]
+                    });
+                } else if (status === 'Delivered') {
+                    await sendWhatsAppMessage({
+                        to: order.customerId.phone,
+                        templateName: 'order_delivered',
+                        variables: [order.customerId.name, order.orderNumber]
+                    });
+                }
             } catch (err) {
                 logger.error(`[Status Update WhatsApp] Failed: ${err.message}`);
             }
@@ -319,7 +345,7 @@ const exportOrders = async (req, res, next) => {
 const sendOrderWhatsApp = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { template } = req.body;
+        const { template = 'order_created' } = req.body;
 
         const order = await Order.findById(id).populate('customerId');
         if (!order) return next(createError(404, 'Order not found'));
@@ -327,20 +353,32 @@ const sendOrderWhatsApp = async (req, res, next) => {
         const phone = order.customerId?.phone;
         if (!phone) return next(createError(400, 'Customer phone number not found'));
 
-        // Basic mock notification if template is not "Invoice" or something specific
-        // Real implementation should match your WhatsApp provider templates
-        
-        const { sendReceiptWhatsapp } = require('../services/whatsappService');
-        
-        // Use a generic logic for now to call any configured template
-        // Adjust this if you have specific templates for Confirmation, Prepared, etc.
-        const response = await sendReceiptWhatsapp(phone, '', order.customerId.name, order.totalAmount);
+        let templateName = 'order_created';
+        let variables = [
+            order.customerId.name, 
+            order.orderNumber, 
+            new Date(order.eventDate).toLocaleDateString('en-IN')
+        ];
 
-        if (response.status === 'failed') {
+        if (template === 'order_dispatched' || template === 'dispatched') {
+            templateName = 'order_dispatched';
+            variables = [order.customerId.name, order.orderNumber];
+        } else if (template === 'order_delivered' || template === 'delivered') {
+            templateName = 'order_delivered';
+            variables = [order.customerId.name, order.orderNumber];
+        }
+
+        const response = await sendWhatsAppMessage({
+            to: phone,
+            templateName,
+            variables
+        });
+
+        if (!response.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response.error });
         }
 
-        res.json({ success: true, message: `WhatsApp notification "${template}" sent successfully to ${phone}` });
+        res.json({ success: true, message: `Order WhatsApp notification (${templateName}) sent successfully to ${phone}` });
     } catch (err) {
         next(err);
     }

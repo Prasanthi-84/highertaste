@@ -37,6 +37,8 @@ export interface Order {
   amountDue: number;
   isArchived: boolean;
   notes?: string;
+  paymentLinkUrl?: string;
+  paymentLinkExpiresAt?: string | Date;
   createdAt?: string;
   updatedAt?: string;
 }

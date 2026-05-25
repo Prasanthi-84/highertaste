@@ -10,7 +10,11 @@ const sendWhatsApp = async (req, res, next) => {
             return next(createError(400, 'Phone and message are required'));
         }
 
-        const result = await sendWhatsAppMessage({ phone, message });
+        const result = await sendWhatsAppMessage({ 
+            to: phone, 
+            templateName: 'order_created', // Default for legacy/test
+            variables: [phone, "TEST", new Date().toLocaleDateString()] 
+        });
 
         if (!result || result.success === false) {
              return res.status(200).json({

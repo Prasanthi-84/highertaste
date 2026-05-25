@@ -124,7 +124,7 @@ export default function Kitchen() {
                      {(order.lineItems || []).map((item, idx) => (
                        <li key={idx} className="text-sm flex items-start gap-2 text-slate-700">
                          <span className="text-slate-300">•</span>
-                         <span className="font-medium text-[13px]">{typeof item.menuItemId === 'object' ? item.menuItemId.name : item.name}</span>
+                         <span className="font-medium text-[13px]">{typeof item.menuItemId === 'object' && item.menuItemId !== null ? item.menuItemId.name : item.name}</span>
                        </li>
                      ))}
                    </ul>

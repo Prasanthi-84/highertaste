@@ -153,9 +153,9 @@ const recordPayment = async (req, res, next) => {
         ]);
 
         // 7. 🔥 WhatsApp Notification for Payment Success
+        // (Removed as user specifically requested only 4 strict templates right now)
         try {
-            const msg = `Payment of ₹${amount.toLocaleString('en-IN')} for order #${populated.orderId?.orderNumber} received successfully! 🙏`;
-            await sendWhatsAppMessage({ phone: customer.phone, message: msg });
+            logger.info(`Payment recorded for ${populated.orderId?.orderNumber}`);
         } catch (err) {
             logger.error(`[Payment WhatsApp] Failed: ${err.message}`);
         }
@@ -426,10 +426,9 @@ const verifyPayment = async (req, res, next) => {
         });
 
         // 6. 🔥 WhatsApp Notification for Online Payment Success
+        // (Removed as user specifically requested only 4 strict templates right now)
         try {
-            const populatedOrder = await Order.findById(orderId).populate('customerId');
-            const msg = `Online Payment of ₹${amount.toLocaleString('en-IN')} for order #${populatedOrder.orderNumber} confirmed! 🎉`;
-            await sendWhatsAppMessage({ phone: populatedOrder.customerId?.phone, message: msg });
+            logger.info('Online payment verified successfully');
         } catch (err) {
             logger.error(`[Online Payment WhatsApp] Failed: ${err.message}`);
         }
@@ -446,13 +445,123 @@ const verifyPayment = async (req, res, next) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Create a Razorpay payment link
+// @route   POST /api/payments/create-link
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+const createPaymentLink = async (req, res, next) => {
+    try {
+        const { orderId } = req.body;
+        
+        const order = await Order.findById(orderId).populate('customerId');
+        if (!order) return next(createError(404, 'Order not found'));
+
+        const razorpayInstance = initRazorpay();
+        if (!razorpayInstance) return next(createError(500, 'Razorpay configuration error'));
+
+        const expireDate = Math.floor((Date.now() + 20 * 60 * 1000) / 1000); // 20 mins from now in seconds
+
+        const paymentLinkRequest = {
+            amount: Math.round(order.amountDue * 100), // paise
+            currency: "INR",
+            accept_partial: false,
+            expire_by: expireDate,
+            reference_id: order.orderNumber,
+            description: `Payment for Order #${order.orderNumber} - ${order.eventName}`,
+            customer: {
+                name: order.customerId.name,
+                email: order.customerId.email || 'catering@hkmvizag.org',
+                contact: order.customerId.phone
+            },
+            notify: {
+                sms: true,
+                email: true
+            },
+            reminder_enable: true,
+            notes: {
+                order_id: orderId
+            },
+            callback_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-details/${orderId}`,
+            callback_method: "get"
+        };
+
+        const paymentLink = await razorpayInstance.paymentLink.create(paymentLinkRequest);
+
+        // Save to order
+        order.paymentLinkId = paymentLink.id;
+        order.paymentLinkUrl = paymentLink.short_url;
+        order.paymentLinkExpiresAt = new Date(expireDate * 1000);
+        await order.save();
+
+        // 🔥 TRIGGER WHATSAPP PAYMENT LINK
+        try {
+            await sendWhatsAppMessage({
+                to: order.customerId.phone,
+                templateName: 'payment_request',
+                variables: [order.customerId.name, order.amountDue, paymentLink.short_url]
+            });
+        } catch (err) {
+            logger.error(`[Payment Link WhatsApp] Failed: ${err.message}`);
+        }
+
+        res.json({
+            success: true,
+            message: 'Payment link created and sent successfully',
+            data: {
+                link: paymentLink.short_url,
+                id: paymentLink.id,
+                expiresAt: order.paymentLinkExpiresAt
+            }
+        });
+
+    } catch (err) {
+        logger.error(`Razorpay Payment Link Error: ${err.message}`);
+        next(createError(500, `Razorpay error: ${err.message}`));
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Share existing Razorpay payment link via WhatsApp
+// @route   POST /api/payments/:id/whatsapp-link
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+const sharePaymentLinkWhatsApp = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findById(id).populate('customerId');
+        if (!order) return next(createError(404, 'Order not found'));
+
+        if (!order.paymentLinkUrl) {
+            return next(createError(400, 'No payment link found for this order. Please generate one first.'));
+        }
+
+
+        const response = await sendWhatsAppMessage({
+            to: order.customerId.phone,
+            templateName: 'payment_request',
+            variables: [order.customerId.name, order.amountDue, order.paymentLinkUrl]
+        });
+
+        if (!response?.success) {
+            return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });
+        }
+
+        res.json({ success: true, message: 'Payment link shared successfully via WhatsApp' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     createRazorpayOrder,
+    createPaymentLink,
     verifyPayment,
     recordPayment,
     getPayments,
     getPaymentSummary,
     reconcilePayment,
     exportPayments,
+    sharePaymentLinkWhatsApp,
 };
 

@@ -7,6 +7,7 @@ const {
     updateQuote,
     deleteQuote,
     convertQuoteToOrder,
+    sendQuoteWhatsApp,
 } = require('../controllers/quoteController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -23,5 +24,6 @@ router.route('/:id')
     .delete(deleteQuote); // DELETE /api/quotes/:id
 
 router.post('/:id/convert', convertQuoteToOrder); // POST /api/quotes/:id/convert
+router.post('/:id/send-whatsapp', sendQuoteWhatsApp); // POST /api/quotes/:id/send-whatsapp
 
 module.exports = router;

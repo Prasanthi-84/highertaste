@@ -183,9 +183,9 @@ export default function Orders() {
           }
         },
         prefill: {
-          name: typeof order.customerId === 'object' ? order.customerId.name : "",
-          email: typeof order.customerId === 'object' ? order.customerId.email : "",
-          contact: typeof order.customerId === 'object' ? order.customerId.phone : "",
+          name: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : "",
+          email: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.email : "",
+          contact: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.phone : "",
         },
         theme: {
           color: "#5a141e",
@@ -247,7 +247,7 @@ export default function Orders() {
                     <SelectTrigger className="font-bold border-gray-200"><SelectValue placeholder="Choose accepted quote..." /></SelectTrigger>
                     <SelectContent>
                       {acceptedQuotes.map(q => (
-                        <SelectItem key={q._id} value={q._id}>{q.quoteNumber} - {typeof q.customerId === 'object' ? q.customerId.name : q.customerId}</SelectItem>
+                        <SelectItem key={q._id} value={q._id}>{q.quoteNumber} - {typeof q.customerId === 'object' && q.customerId !== null ? q.customerId.name : q.customerId}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -336,7 +336,7 @@ export default function Orders() {
                   </TableCell>
                   <TableCell className="py-2 px-1">
                     <div className="flex flex-col">
-                      <span className="font-bold text-gray-900 leading-none mb-0.5 text-sm">{typeof order.customerId === 'object' ? order.customerId.name : order.customerName || "—"}</span>
+                      <span className="font-bold text-gray-900 leading-none mb-0.5 text-sm">{typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : order.customerName || "—"}</span>
                       <span className="text-[9px] text-gray-500 font-medium truncate max-w-[180px]">{order.venue}</span>
                     </div>
                   </TableCell>

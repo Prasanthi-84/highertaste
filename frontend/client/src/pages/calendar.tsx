@@ -231,7 +231,7 @@ export default function CalendarPage() {
                                     <div className="font-black text-lg text-slate-800 leading-tight mb-2 tracking-tight line-clamp-1">{order.eventName || "Premium Catering Event"}</div>
                                     <div className="flex flex-col gap-2 pt-2 border-t border-black/5">
                                         <div className="text-[10px] font-black flex items-center gap-2 opacity-70 uppercase tracking-widest text-slate-500">
-                                            <Users className="h-3.5 w-3.5" /> {order.pax} Pax • {typeof order.customerId === 'object' ? order.customerId.name : "VVIP Guest"}
+                                            <Users className="h-3.5 w-3.5" /> {order.pax} Pax • {typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : "VVIP Guest"}
                                         </div>
                                         <div className="text-[10px] font-black flex items-center gap-2 opacity-70 uppercase tracking-widest text-slate-500">
                                             <MapPin className="h-3.5 w-3.5" /> {order.venue}

@@ -296,7 +296,7 @@ export default function Customers() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="type" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</Label>
-                    <Select value={formData.customerType} onValueChange={(v: any) => setFormData({ ...formData, customerType: v })}>
+                    <Select value={formData.customerType || ""} onValueChange={(v: any) => setFormData({ ...formData, customerType: v })}>
                       <SelectTrigger className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold">
                         <SelectValue />
                       </SelectTrigger>
@@ -349,32 +349,32 @@ export default function Customers() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b pb-1">Address Details</p>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Street Info</Label>
-                  <Input 
-                    value={formData.address?.street} 
-                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, street: e.target.value } })} 
-                    className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
-                  />
+                    <Input 
+                      value={formData.address?.street || ""} 
+                      onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, street: e.target.value } })} 
+                      className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
+                    />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="City"
-                    value={formData.address?.city} 
-                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, city: e.target.value } })} 
-                    className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
-                  />
-                  <Input 
-                    placeholder="State"
-                    value={formData.address?.state} 
-                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, state: e.target.value } })} 
-                    className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
-                  />
+                    <Input 
+                      placeholder="City"
+                      value={formData.address?.city || ""} 
+                      onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, city: e.target.value } })} 
+                      className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
+                    />
+                    <Input 
+                      placeholder="State"
+                      value={formData.address?.state || ""} 
+                      onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, state: e.target.value } })} 
+                      className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold"
+                    />
                 </div>
-                <Input 
-                  placeholder="PIN Code"
-                  value={formData.address?.pincode} 
-                  onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, pincode: e.target.value } })} 
-                  className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold w-1/2"
-                />
+                  <Input 
+                    placeholder="PIN Code"
+                    value={formData.address?.pincode || ""} 
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, pincode: e.target.value } })} 
+                    className="h-11 bg-gray-50 border-gray-200 rounded-lg text-sm font-semibold w-1/2"
+                  />
               </div>
 
               <div className="space-y-2">

@@ -94,13 +94,22 @@ const createQuote = async (req, res, next) => {
         if (!customer) return next(createError(404, 'Customer not found.'));
 
         // Validate & compute line item totals
-        const computedItems = lineItems.map((item) => ({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            qty: item.qty,
-            unitPrice: item.unitPrice,
-            total: parseFloat((item.qty * item.unitPrice).toFixed(2)),
-        }));
+        const computedItems = lineItems.map((item) => {
+            const qty = parseFloat(item.qty);
+            const unitPrice = parseFloat(item.unitPrice);
+            
+            // Fallback to 0 if invalid to prevent NaN, or you could return an error
+            const validQty = isNaN(qty) ? 0 : qty;
+            const validPrice = isNaN(unitPrice) ? 0 : unitPrice;
+
+            return {
+                menuItemId: item.menuItemId,
+                name: item.name,
+                qty: validQty,
+                unitPrice: validPrice,
+                total: parseFloat((validQty * validPrice).toFixed(2)),
+            };
+        });
 
         const { subTotal, taxAmount, totalAmount } = computeTotals(computedItems, taxRate, discountAmount);
 
@@ -126,6 +135,20 @@ const createQuote = async (req, res, next) => {
         });
 
         const populated = await quote.populate('customerId', 'name phone email company');
+
+        // 🔥 TRIGGER WHATSAPP QUOTATION
+        const { sendQuotationTemplate } = require('../services/whatsappService');
+        try {
+            await sendQuotationTemplate(
+                populated.customerId.name,
+                populated.eventName,
+                populated.quoteNumber,
+                populated.totalAmount,
+                populated.customerId.phone
+            );
+        } catch (err) {
+            console.error(`[Quote WhatsApp] Failed: ${err.message}`);
+        }
 
         res.status(201).json({
             success: true,
@@ -184,10 +207,19 @@ const updateQuote = async (req, res, next) => {
 
         // Recompute totals if line items were updated
         if (req.body.lineItems) {
-            quote.lineItems = quote.lineItems.map((item) => ({
-                ...item.toObject ? item.toObject() : item,
-                total: parseFloat((item.qty * item.unitPrice).toFixed(2)),
-            }));
+            quote.lineItems = quote.lineItems.map((item) => {
+                const qty = parseFloat(item.qty);
+                const unitPrice = parseFloat(item.unitPrice);
+                const validQty = isNaN(qty) ? 0 : qty;
+                const validPrice = isNaN(unitPrice) ? 0 : unitPrice;
+
+                return {
+                    ...(item.toObject ? item.toObject() : item),
+                    qty: validQty,
+                    unitPrice: validPrice,
+                    total: parseFloat((validQty * validPrice).toFixed(2)),
+                };
+            });
             const { subTotal, taxAmount, totalAmount } = computeTotals(
                 quote.lineItems, quote.taxRate, quote.discountAmount
             );
@@ -301,6 +333,48 @@ const convertQuoteToOrder = async (req, res, next) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Send Quote notification via WhatsApp (Manual trigger)
+// @route   POST /api/quotes/:id/send-whatsapp
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+const sendQuoteWhatsApp = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const quote = await Quote.findById(id).populate('customerId');
+        if (!quote) return next(createError(404, 'Quote not found'));
+
+        const phone = quote.customerId?.phone;
+        if (!phone) return next(createError(400, 'Customer phone number not found'));
+
+        const { sendWhatsAppMessage } = require('../services/whatsappService');
+        const response = await sendWhatsAppMessage({
+            to: phone,
+            templateName: 'quotation_v1',
+            variables: [
+                quote.customerId.name,
+                quote.eventName,
+                quote.quoteNumber,
+                `₹${quote.totalAmount}/-`
+            ]
+        });
+
+        if (!response?.success) {
+            return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });
+        }
+
+        // Optional: Mark quote as "Sent"
+        if (quote.status === 'Draft') {
+            quote.status = 'Sent';
+            await quote.save();
+        }
+
+        res.json({ success: true, message: `Quotation WhatsApp sent successfully to ${phone}` });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     getQuotes,
     createQuote,
@@ -308,4 +382,5 @@ module.exports = {
     updateQuote,
     deleteQuote,
     convertQuoteToOrder,
+    sendQuoteWhatsApp,
 };

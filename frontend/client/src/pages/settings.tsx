@@ -326,7 +326,7 @@ export default function Settings() {
               users.map((u: any) => (
                 <div key={u.id || u._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50">
                   <div>
-                    <p className="font-semibold text-sm text-slate-800">{u.name} <Badge variant="secondary" className="ml-2 text-[10px]">{u.role}</Badge></p>
+                    <div className="font-semibold text-sm text-slate-800">{u.name} <Badge variant="secondary" className="ml-2 text-[10px]">{u.role}</Badge></div>
                     <p className="text-xs text-slate-500">{u.email}</p>
                   </div>
                   {u.role !== 'admin' && (

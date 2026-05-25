@@ -28,7 +28,7 @@ import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 import { useGetCustomersQuery } from "@/store/customerApi";
 import { useGetMenuQuery } from "@/store/menuApi";
-import { useCreateQuoteMutation, useUpdateQuoteMutation, useGetQuoteByIdQuery } from "@/store/quoteApi";
+import { useCreateQuoteMutation, useUpdateQuoteMutation, useGetQuoteByIdQuery, useSendQuoteWhatsappMutation } from "@/store/quoteApi";
 
 const quoteSchema = z.object({
   customerId: z.string().min(1, "Customer is required"),
@@ -66,6 +66,10 @@ export default function QuoteDetails() {
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
+      customerId: "",
+      eventName: "",
+      venue: "",
+      pax: 50,
       status: "Draft",
       validUntil: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
       eventDate: format(new Date(), "yyyy-MM-dd"),
@@ -117,7 +121,7 @@ export default function QuoteDetails() {
     console.log("Submitting Quote Data:", data);
     try {
       // Ensure customerId is just the ID string if it's currently an object
-      const cleanCustomerId = typeof data.customerId === 'object' 
+      const cleanCustomerId = typeof data.customerId === 'object' && data.customerId !== null
         ? (data.customerId as any)._id 
         : data.customerId;
 
@@ -156,26 +160,21 @@ export default function QuoteDetails() {
     console.warn("Form Validation Errors:", formErrors);
   }
 
-  const handleWhatsAppShare = () => {
-    const data = form.getValues();
-    const customer = customers.find(c => c._id === data.customerId);
-    const phone = customer?.phone || "";
-    const customerName = customer?.name || "Customer";
-    
-    const message = `Hello ${customerName},
-Here is your catering quotation:
+  const [sendQuoteWhatsapp, { isLoading: isSendingWhatsApp }] = useSendQuoteWhatsappMutation();
 
-Event: ${data.eventName}
-Date: ${format(new Date(data.eventDate), "PPP")}
-Total: ₹${total.toLocaleString()}
+  const handleWhatsAppShare = async () => {
+    if (!id) {
+      toast.error("Please save the quotation first before sending.");
+      return;
+    }
 
-Please review and confirm.
-
-- The Higher Taste`;
-
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
-    toast.success("WhatsApp sharing initiated");
+    try {
+      await sendQuoteWhatsapp(id).unwrap();
+      toast.success("WhatsApp quotation sent successfully via Meta Cloud API");
+    } catch (err: any) {
+      console.error("WhatsApp Send Error:", err);
+      toast.error(err.data?.message || "Failed to send WhatsApp message");
+    }
   };
 
   if (isLoadingQuote) {
@@ -206,7 +205,7 @@ Please review and confirm.
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-gray-500">Customer *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl><SelectTrigger className="bg-gray-50 border-gray-100"><SelectValue placeholder="Select customer" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {customers.map(c => <SelectItem key={c._id} value={c._id!}>{c.name} ({c.company || "Individual"})</SelectItem>)}
@@ -296,7 +295,7 @@ Please review and confirm.
                                     form.setValue(`lineItems.${index}.name`, selected.name);
                                 }
                             }} 
-                            value={field.value}
+                            value={field.value || ""}
                           >
                             <FormControl><SelectTrigger className="bg-gray-50 border-gray-100"><SelectValue placeholder="Select menu item" /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -387,8 +386,10 @@ Please review and confirm.
                     variant="outline" 
                     className="w-full border-[#0070f3]/20 text-[#0070f3] hover:bg-[#0070f3]/5 font-bold h-11 flex items-center justify-center gap-2"
                     onClick={handleWhatsAppShare}
+                    disabled={isSendingWhatsApp}
                 >
-                    <Send className="h-4 w-4" /> Send via WhatsApp
+                    {isSendingWhatsApp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Send via WhatsApp
                 </Button>
               </CardFooter>
             </Card>
@@ -401,7 +402,7 @@ Please review and confirm.
                     name="status"
                     render={({ field }) => (
                     <FormItem>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl><SelectTrigger className="bg-white border-gray-100 font-bold"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="Draft">Draft (Internal)</SelectItem>

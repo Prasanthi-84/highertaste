@@ -144,7 +144,7 @@ export default function InvoiceDetails() {
       // 2. Create Razorpay Order
       const amount = paymentAmount;
       const response = await createPaymentOrder({ 
-        orderId: typeof invoice.orderId === 'object' ? invoice.orderId._id : invoice.orderId, 
+        orderId: typeof invoice.orderId === 'object' && invoice.orderId !== null ? invoice.orderId._id : invoice.orderId, 
         amount 
       }).unwrap();
 
@@ -168,7 +168,7 @@ export default function InvoiceDetails() {
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
-            orderId: typeof invoice.orderId === 'object' ? invoice.orderId._id : invoice.orderId,
+            orderId: typeof invoice.orderId === 'object' && invoice.orderId !== null ? invoice.orderId._id : invoice.orderId,
             invoiceId: id!,
             amount: amount,
           };

@@ -79,6 +79,20 @@ export const paymentApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Payments', 'Invoices', 'Orders'],
     }),
+    createPaymentLink: builder.mutation<{ success: boolean; data: any }, { orderId: string }>({
+      query: (body) => ({
+        url: '/payments/create-link',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    sharePaymentLinkWhatsapp: builder.mutation<{ success: boolean; message: string }, string>({
+      query: (id) => ({
+        url: `/payments/${id}/share-whatsapp`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -88,5 +102,7 @@ export const {
   useCreatePaymentMutation,
   useCreatePaymentOrderMutation,
   useVerifyPaymentMutation,
+  useCreatePaymentLinkMutation,
+  useSharePaymentLinkWhatsappMutation,
 } = paymentApi;
 

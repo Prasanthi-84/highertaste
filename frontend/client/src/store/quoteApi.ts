@@ -69,6 +69,13 @@ export const quoteApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => ["Quotes", "Orders", { type: 'Quotes', id }],
     }),
+
+    sendQuoteWhatsapp: builder.mutation<{ success: boolean; message: string }, string>({
+      query: (id) => ({
+        url: `/quotes/${id}/send-whatsapp`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -79,4 +86,5 @@ export const {
   useUpdateQuoteMutation,
   useDeleteQuoteMutation,
   useConvertQuoteToOrderMutation,
+  useSendQuoteWhatsappMutation,
 } = quoteApi;

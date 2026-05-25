@@ -48,37 +48,44 @@ const createMailTransporter = () =>
  * @route   POST /api/auth/login
  * @access  Public
  */
-const login = async (req, res) => {
+const login = async (req, res, next) => {
+    // 1. Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const errorMsg = errors.array().map(err => err.msg).join(', ');
+        return res.status(400).json({ success: false, message: errorMsg });
+    }
+
     const { email, password } = req.body;
-    const adminEmail = (process.env.ADMIN_EMAIL || 'mukunda@hkmvizag.org').toLowerCase();
-    const adminHash  = process.env.ADMIN_PASSWORD_HASH;
-
-    if (!email || !password)
-        return res.status(400).json({ success: false, message: 'Email and password required.' });
-
-    if (email.toLowerCase() !== adminEmail)
-        return res.status(401).json({ success: false, message: 'Access denied. Unauthorized email.' });
 
     try {
-        const isMatch = await bcrypt.compare(password, adminHash);
-        if (!isMatch)
-            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
-
-        let user = await User.findOne({ email: adminEmail });
+        // 2. Find user by email
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+        
         if (!user) {
-            user = await User.create({
-                name: 'Administrator',
-                email: adminEmail,
-                password: 'SYSTEM_ADMIN_ACCOUNT',
-                role: 'admin',
-                isActive: true,
-            });
+            logger.warn(`Login attempt for non-existent user: ${email}`);
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
         }
 
-        sendTokenResponse(user, 200, res, 'Login successful. Welcome, Admin.');
+        // 3. Match password
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            logger.warn(`Invalid password attempt for user: ${email}`);
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        // 4. Check if account is active
+        if (!user.isActive) {
+            logger.warn(`Deactivated user attempted login: ${email}`);
+            return res.status(403).json({ success: false, message: 'Your account is inactive. Please contact the administrator.' });
+        }
+
+        // 5. Send success response
+        logger.info(`User logged in successfully: ${email}`);
+        sendTokenResponse(user, 200, res, 'Login successful. Welcome back.');
     } catch (error) {
-        console.error('Login Error:', error.message);
-        res.status(500).json({ success: false, message: 'Server error during authentication.' });
+        logger.error(`Login Error [${email}]: ${error.message}`, { stack: error.stack });
+        next(error); // Pass to centralized error handler
     }
 };
 
@@ -255,18 +262,13 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        // Hash new password and update ADMIN_PASSWORD_HASH so current server process
-        // can authenticate the new password immediately
-        const salt    = await bcrypt.genSalt(12);
-        const newHash = await bcrypt.hash(newPassword, salt);
-        process.env.ADMIN_PASSWORD_HASH = newHash;
-
-        // Update user record password (pre-save hook will hash again, so store the
-        // raw value — the hook detects isModified)
-        user.password             = newPassword;  // hook will hash this
-        user.resetPasswordToken   = undefined;    // one-time use: clear immediately
+        // Update user record password (pre-save hook will hash this)
+        user.password             = newPassword;
+        user.resetPasswordToken   = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
+
+        logger.info(`Password reset successfully for user: ${user.email}`);
 
         res.status(200).json({
             success: true,

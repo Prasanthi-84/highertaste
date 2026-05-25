@@ -53,11 +53,26 @@ const getMenuItems = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const createMenuItem = async (req, res, next) => {
     try {
-        const { name, category, price, unit, description, tags } = req.body;
+        let { name, category, price, unit, description, tags } = req.body;
         const imageUrl = req.file ? (req.file.linkUrl || req.file.path) : req.body.imageUrl;
 
         if (!name || !category || price === undefined) {
             return next(createError(400, 'Name, category, and price are required.'));
+        }
+
+        // Normalize Category (e.g., "dessert" -> "Desserts", "Main course" -> "Main Course")
+        const validCategories = ['Main Course', 'Breads', 'Rice', 'Desserts', 'Sides', 'Starters', 'Beverages'];
+        const normalized = validCategories.find(c => c.toLowerCase() === category.trim().toLowerCase());
+        
+        // Handle singular/plural common mistakes
+        if (!normalized) {
+            if (category.trim().toLowerCase() === 'dessert') category = 'Desserts';
+            if (category.trim().toLowerCase() === 'starter') category = 'Starters';
+            if (category.trim().toLowerCase() === 'beverage') category = 'Beverages';
+            if (category.trim().toLowerCase() === 'side') category = 'Sides';
+            if (category.trim().toLowerCase() === 'bread') category = 'Breads';
+        } else {
+            category = normalized;
         }
 
         const item = await MenuItem.create({

@@ -18,13 +18,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { setOrderData, updateDeliveryField, addLineItem, removeLineItem, updateLineItemQty, setStatus } from "@/store/orderSlice";
-import { useGetOrderByIdQuery, useUpdateOrderMutation } from "@/store/OrderApi";
+import { useGetOrderByIdQuery, useUpdateOrderMutation, useSendOrderWhatsAppMutation } from "@/store/OrderApi";
 import { useGetCustomersQuery } from "@/store/customerApi";
 import { useGetMenuQuery } from "@/store/menuApi";
-import { useCreatePaymentOrderMutation, useVerifyPaymentMutation } from "@/store/paymentApi";
+import { useCreatePaymentOrderMutation, useVerifyPaymentMutation, useCreatePaymentLinkMutation, useSharePaymentLinkWhatsappMutation } from "@/store/paymentApi";
 import { useSendWhatsappMutation } from "@/store/notificationApi";
 import { exportSingleOrderToPDF } from "@/lib/exportInvoices";
-import { MessageSquare, CreditCard, ExternalLink, QrCode } from "lucide-react";
+import { MessageSquare, CreditCard, ExternalLink, QrCode, Copy, Share2 } from "lucide-react";
 
 // Add Razorpay type for TS
 declare global {
@@ -85,9 +85,13 @@ export default function OrderDetails() {
   const { data: menuData } = useGetMenuQuery();
   const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
   const [createPaymentOrder, { isLoading: isCreatingRP }] = useCreatePaymentOrderMutation();
+  const [createPaymentLink, { isLoading: isCreatingLink }] = useCreatePaymentLinkMutation();
+  const [sharePaymentLinkWhatsapp, { isLoading: isSharingLink }] = useSharePaymentLinkWhatsappMutation();
   const [verifyPayment] = useVerifyPaymentMutation();
-  const [sendWhatsapp, { isLoading: isSendingWA }] = useSendWhatsappMutation();
+  const [sendWhatsapp, { isLoading: isSendingLegacyWA }] = useSendWhatsappMutation();
+  const [sendOrderWhatsApp, { isLoading: isSendingTemplateWA }] = useSendOrderWhatsAppMutation();
 
+  const isSendingWA = isSendingLegacyWA || isSendingTemplateWA;
 
   const customers = customersData || [];
   const menuItems = menuData || [];
@@ -117,7 +121,7 @@ export default function OrderDetails() {
       const isValidDate = parsedDate instanceof Date && !isNaN(parsedDate.getTime());
 
       form.reset({
-        customerId: typeof q.customerId === 'object' ? q.customerId._id : q.customerId,
+        customerId: typeof q.customerId === 'object' && q.customerId !== null ? q.customerId._id : q.customerId,
         venue: q.venue || "",
         headcount: q.pax || 50,
         status: q.status || "Draft",
@@ -276,9 +280,9 @@ export default function OrderDetails() {
           }
         },
         prefill: {
-          name: typeof order.customerId === 'object' ? order.customerId.name : "",
-          email: typeof order.customerId === 'object' ? order.customerId.email : "",
-          contact: typeof order.customerId === 'object' ? order.customerId.phone : "",
+          name: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : "",
+          email: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.email : "",
+          contact: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.phone : "",
         },
         theme: {
           color: "#5a141e",
@@ -293,32 +297,48 @@ export default function OrderDetails() {
     }
   };
 
+  const handleCopyLink = (link: string) => {
+    navigator.clipboard.writeText(link);
+    toast({ title: "Copied!", description: "Payment link copied to clipboard." });
+  };
+
   const handleSendWhatsapp = async (type: 'confirmation' | 'link' | 'status') => {
     if (!orderData?.data) return;
     const order = orderData.data;
-    const phone = typeof order.customerId === 'object' ? order.customerId.phone : "";
+    const phone = typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.phone : "";
     if (!phone) {
         toast({ title: "No Phone Number", description: "Customer has no phone number saved.", variant: "destructive" });
         return;
     }
 
-    let message = "";
-    if (type === 'confirmation') {
-        message = `Your order #${order.orderNumber} is confirmed 🎉\nEvent Date: ${new Date(order.eventDate).toLocaleDateString()}\nTotal: ₹${order.totalAmount.toLocaleString()}`;
-    } else if (type === 'link') {
-        message = `Pending payment alert for order #${order.orderNumber} 💰\nAmount Due: ₹${order.amountDue.toLocaleString()}\nPay here: ${window.location.origin}/pay/${order._id}`;
-    } else if (type === 'status') {
-        const stage = workflowStages.find(s => s.id === status);
-        const stageLabel = stage ? stage.label : status;
-        message = `Great news! Your order #${order.orderNumber} is now: ${stageLabel} 🍽️`;
-    }
-
-
     try {
-        await sendWhatsapp({ phone, message }).unwrap();
-        toast({ title: "WhatsApp Sent", description: "Notification sent successfully." });
-    } catch (err) {
-        toast({ title: "Error", description: "Failed to send WhatsApp.", variant: "destructive" });
+        if (type === 'link') {
+            if (!order.paymentLinkUrl) {
+                // Generate new link if not exists
+                await createPaymentLink({ orderId: order._id }).unwrap();
+                toast({ title: "Link Created", description: "Payment link generated and sent via WhatsApp." });
+            } else {
+                // Reshare existing link
+                await sharePaymentLinkWhatsapp(order._id).unwrap();
+                toast({ title: "Link Shared", description: "Existing payment link sent via WhatsApp." });
+            }
+            refetch();
+            return;
+        }
+
+        // New Template-based notification
+        let template = 'order_created';
+        if (type === 'confirmation') template = 'order_created';
+        else if (type === 'status') {
+             if (status === 'Dispatched') template = 'order_dispatched';
+             else if (status === 'Delivered') template = 'order_delivered';
+             else template = 'order_created';
+        }
+
+        await sendOrderWhatsApp({ id: order._id, template }).unwrap();
+        toast({ title: "WhatsApp Sent", description: `Message "${template}" sent successfully.` });
+    } catch (err: any) {
+        toast({ title: "Error", description: err.data?.message || "Failed to process request.", variant: "destructive" });
     }
   };
 
@@ -593,6 +613,51 @@ export default function OrderDetails() {
                     </div>
                 </CardContent>
               </Card>
+
+              {orderData?.data?.paymentLinkUrl && (
+                <Card className="border-none shadow-premium bg-gradient-to-br from-emerald-50 to-white overflow-hidden">
+                  <CardHeader className="bg-emerald-100/30 border-b">
+                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-emerald-800 flex items-center gap-2">
+                        <CreditCard className="h-3 w-3" /> Active Payment Link
+                      </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
+                      <div className="bg-white border-2 border-dashed border-emerald-100 p-4 rounded-xl flex items-center justify-between gap-4">
+                          <div className="flex-1 overflow-hidden">
+                              <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Payment URL</p>
+                              <p className="text-xs font-bold text-emerald-700 truncate">{orderData.data.paymentLinkUrl}</p>
+                              {orderData.data.paymentLinkExpiresAt && (
+                                <p className="text-[9px] text-gray-400 mt-1 italic">
+                                  Expires: {new Date(orderData.data.paymentLinkExpiresAt).toLocaleString()}
+                                </p>
+                              )}
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 border-emerald-100 text-emerald-600 hover:bg-emerald-50"
+                                onClick={() => handleCopyLink(orderData.data.paymentLinkUrl!)}
+                              >
+                                  <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 border-emerald-100 text-emerald-600 hover:bg-emerald-50"
+                                onClick={() => handleSendWhatsapp('link')}
+                                disabled={isSharingLink}
+                              >
+                                  {isSharingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                              </Button>
+                          </div>
+                      </div>
+                      <p className="text-[9px] text-center text-emerald-600 font-bold uppercase tracking-wider opacity-60">
+                        Secure Razorpay Checkout Link
+                      </p>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="border-none shadow-premium">
                 <CardHeader className="bg-gray-50/50 border-b">

@@ -95,11 +95,11 @@ export const mockMenu: MenuItem[] = [
   { id: "V-003", name: "Dal Maharani (Slow Cooked)", category: "Main Course", price: 250, isVeg: true },
   { id: "V-004", name: "Butter Naan (Whole Wheat, Eggless)", category: "Breads", price: 60, isVeg: true },
   { id: "V-005", name: "Saffron Vegetable Pulao", category: "Rice", price: 220, isVeg: true },
-  { id: "V-006", name: "Rabri with Malpua", category: "Dessert", price: 180, isVeg: true },
-  { id: "V-007", name: "Kheer Prasad (Rich Rice Pudding)", category: "Dessert", price: 100, isVeg: true },
+  { id: "V-006", name: "Rabri with Malpua", category: "Desserts", price: 180, isVeg: true },
+  { id: "V-007", name: "Kheer Prasad (Rich Rice Pudding)", category: "Desserts", price: 100, isVeg: true },
   { id: "V-008", name: "Crispy Bhindi Jaipuri", category: "Sides", price: 180, isVeg: true },
   { id: "V-009", name: "Aloo Gobhi Adraki", category: "Main Course", price: 240, isVeg: true },
-  { id: "V-010", name: "Moong Dal Halwa (Desi Ghee)", category: "Dessert", price: 150, isVeg: true },
+  { id: "V-010", name: "Moong Dal Halwa (Desi Ghee)", category: "Desserts", price: 150, isVeg: true },
 ];
 
 export const mockCustomers: Customer[] = [

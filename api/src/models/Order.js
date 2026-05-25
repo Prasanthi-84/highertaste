@@ -82,6 +82,9 @@ const orderSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         },
+        paymentLinkId: { type: String, default: null },
+        paymentLinkUrl: { type: String, default: null },
+        paymentLinkExpiresAt: { type: Date, default: null },
     },
     {
         timestamps: true,
