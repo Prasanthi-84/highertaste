@@ -125,158 +125,124 @@ const getMe = async (req, res) => {
     }
 };
 
+const sendEmail = require('../utils/sendEmail');
+
 /**
  * @desc    Request password reset — generates token and emails reset link
  * @route   POST /api/auth/forgot-password
  * @access  Public
- *
- * Security: Always return the same generic response whether the email
- * matches or not (prevents email enumeration).
  */
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
-    const adminEmail    = (process.env.ADMIN_EMAIL || 'mukunda@hkmvizag.org').toLowerCase();
-    const recoveryEmail = process.env.RECOVERY_EMAIL || 'prabhavathigudipati5@gmail.com';
 
-    // Generic response used for BOTH found & not-found cases
-    const genericOk = () =>
-        res.status(200).json({
-            success: true,
-            message: `If that email is registered, a reset link has been sent to ${recoveryEmail}.`,
-        });
-
-    if (!email || typeof email !== 'string')
-        return res.status(400).json({ success: false, message: 'Email is required.' });
-
-    // Only process for the admin email — but never leak "not found"
-    if (email.toLowerCase() !== adminEmail) return genericOk();
+    if (!email) {
+        return res.status(400).json({ success: false, message: 'Please provide an email address.' });
+    }
 
     try {
-        const user = await User.findOne({ email: adminEmail });
-        if (!user) return genericOk();
+        const user = await User.findOne({ email: email.toLowerCase() });
 
-        // Generate a cryptographically secure random token
-        const rawToken    = crypto.randomBytes(32).toString('hex');
-        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'There is no user with that email.' });
+        }
 
-        // Store hashed token with 15-minute expiry
-        user.resetPasswordToken   = hashedToken;
-        user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        // Hash token and set to resetPasswordToken field
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        // Set token and expiry (10 minutes)
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
         await user.save({ validateBeforeSave: false });
 
-        // Build the frontend reset link
+        // Create reset URL
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const resetUrl    = `${frontendUrl}/reset-password/${rawToken}`;
+        const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-        // Send email
-        const transporter = createMailTransporter();
-        await transporter.sendMail({
-            from: `"Higher Taste Admin" <${process.env.EMAIL_USER}>`,
-            to: recoveryEmail,
-            subject: 'Reset Your Password — Higher Taste Ops Hub',
-            html: `
-                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8f9fa;border-radius:12px;">
-                    <div style="text-align:center;margin-bottom:24px;">
-                        <h1 style="color:#5a141e;font-size:22px;margin:0;">Higher Taste</h1>
-                        <p style="color:#888;margin:4px 0 0;font-size:13px;">Catering Ops Hub</p>
-                    </div>
-                    <div style="background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                        <h2 style="color:#1a1a1a;font-size:18px;margin-top:0;">Reset Your Password</h2>
-                        <p style="color:#555;line-height:1.7;font-size:14px;">
-                            Hello,<br/><br/>
-                            Click the button below to reset your password for the admin account
-                            <strong style="color:#5a141e;">${adminEmail}</strong>.
-                        </p>
-                        <div style="text-align:center;margin:28px 0;">
-                            <a href="${resetUrl}"
-                               style="background:#5a141e;color:#fff;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;">
-                                Reset Password
-                            </a>
-                        </div>
-                        <p style="color:#888;font-size:13px;line-height:1.6;">
-                            ⏰ This link expires in <strong>15 minutes</strong>.<br/>
-                            If you didn't request this, you can safely ignore this email — your password won't change.
-                        </p>
-                        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
-                        <p style="color:#bbb;font-size:12px;margin:0;">
-                            Or copy this link into your browser:<br/>
-                            <a href="${resetUrl}" style="color:#5a141e;word-break:break-all;">${resetUrl}</a>
-                        </p>
-                    </div>
+        const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+        const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #333;">Password Reset Request</h2>
+                <p>You requested a password reset for your account at Higher Taste.</p>
+                <p>Click the button below to reset your password. This link is valid for <strong>10 minutes</strong>.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${resetUrl}" style="background-color: #5a141e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
                 </div>
-            `,
-        });
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 12px; color: #777;">If the button above doesn't work, copy and paste this link into your browser:</p>
+                <p style="font-size: 12px; color: #777; word-break: break-all;">${resetUrl}</p>
+            </div>
+        `;
 
-        logger.info(`Password reset email sent to ${recoveryEmail}`);
-        return genericOk();
-    } catch (error) {
-        logger.error('Forgot Password Error:', error.message);
-
-        // Clean up token so user can retry
         try {
-            const user = await User.findOne({ email: adminEmail });
-            if (user) {
-                user.resetPasswordToken   = undefined;
-                user.resetPasswordExpires = undefined;
-                await user.save({ validateBeforeSave: false });
-            }
-        } catch (_) { /* ignore */ }
+            await sendEmail({
+                email: user.email,
+                subject: 'Password Reset Token',
+                message,
+                html,
+            });
 
-        res.status(500).json({
-            success: false,
-            message: 'Failed to send reset email. Please check email configuration in .env.',
-        });
+            res.status(200).json({ success: true, message: 'Email sent successfully.' });
+        } catch (err) {
+            console.error(err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+
+            await user.save({ validateBeforeSave: false });
+
+            return res.status(500).json({ success: false, message: 'Email could not be sent.' });
+        }
+    } catch (error) {
+        logger.error(`Forgot Password Error: ${error.message}`);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 /**
  * @desc    Reset password using the token from the email link
- * @route   POST /api/auth/reset-password
+ * @route   PUT /api/auth/reset-password/:token
  * @access  Public
- *
- * Body: { token: string, newPassword: string }
  */
 const resetPassword = async (req, res) => {
-    const { token: rawToken, newPassword } = req.body;
+    const { token } = req.params;
+    const { password } = req.body;
 
-    if (!rawToken || !newPassword)
-        return res.status(400).json({ success: false, message: 'Token and new password are required.' });
+    if (!password) {
+        return res.status(400).json({ success: false, message: 'Please provide a new password.' });
+    }
 
-    if (newPassword.length < 6)
-        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    // Hash the token from URL to compare with hashed token in DB
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     try {
-        // Hash the raw token to match what is stored in DB
-        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-
-        // Find user with a valid (unexpired) token
         const user = await User.findOne({
-            resetPasswordToken:   hashedToken,
-            resetPasswordExpires: { $gt: Date.now() },
-        }).select('+resetPasswordToken +resetPasswordExpires');
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() },
+        }).select('+password');
 
         if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired token. Please request a new reset link.',
-            });
+            return res.status(400).json({ success: false, message: 'Invalid or expired token.' });
         }
 
-        // Update user record password (pre-save hook will hash this)
-        user.password             = newPassword;
-        user.resetPasswordToken   = undefined;
-        user.resetPasswordExpires = undefined;
-        await user.save();
+        // Set new password
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
 
-        logger.info(`Password reset successfully for user: ${user.email}`);
+        await user.save();
 
         res.status(200).json({
             success: true,
-            message: 'Password reset successfully. You can now log in with your new password.',
+            message: 'Password reset successful. You can now log in.',
         });
     } catch (error) {
-        logger.error('Reset Password Error:', error.message);
-        res.status(500).json({ success: false, message: 'Server error during password reset.' });
+        logger.error(`Reset Password Error: ${error.message}`);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 

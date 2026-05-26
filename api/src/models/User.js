@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema(
             type: String,
             select: false,
         },
-        resetPasswordExpires: {
+        resetPasswordExpire: {
             type: Date,
             select: false,
         },

@@ -48,7 +48,7 @@ const ForgotPasswordPage: React.FC = () => {
         className="z-10 w-full max-w-md px-4"
       >
         <Card className="border-none shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
-          <CardContent className="p-10">
+          <CardContent className="p-6 sm:p-10">
 
             {/* Logo */}
             <div className="flex items-center gap-3 mb-8">
@@ -88,7 +88,7 @@ const ForgotPasswordPage: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground mb-2">Forgot Password?</h2>
                     <p className="text-muted-foreground text-sm leading-relaxed">
                       Enter the admin email address and we'll send a reset link to the recovery inbox.
-                      The link expires in <strong>15 minutes</strong>.
+                      The link expires in <strong>10 minutes</strong>.
                     </p>
                   </div>
 
@@ -152,7 +152,7 @@ const ForgotPasswordPage: React.FC = () => {
                     If that email is registered, a reset link has been sent to the recovery inbox.
                   </p>
                   <p className="text-xs text-muted-foreground/70 mb-8">
-                    ⏰ Link expires in <strong>15 minutes</strong>. Check spam if you don't see it.
+                    ⏰ Link expires in <strong>10 minutes</strong>. Check spam if you don't see it.
                   </p>
                   <Button
                     variant="outline"

@@ -25,7 +25,13 @@ export const authApi = api.injectEndpoints({
           const { data } = await queryFulfilled;
           dispatch(setCredentials(extractAuthPayload(data)));
         } catch (err: any) {
-          console.error("Login mutation failed:", err.data?.message || err.message || err);
+          const errorMessage = err.error?.data?.message || err.error?.message || (typeof err.error === 'string' ? err.error : null) || err.message || JSON.stringify(err);
+          console.error("Login mutation failed details:", {
+            errorMessage,
+            status: err.error?.status,
+            data: err.error?.data,
+            rawError: err
+          });
         }
       },
     }),
@@ -52,15 +58,15 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    /** POST /api/auth/reset-password  — validates token + sets new password */
+    /** PUT /api/auth/reset-password/:token  — validates token + sets new password */
     resetPassword: builder.mutation<
       { success: boolean; message: string },
-      { token: string; newPassword: string }
+      { token: string; password: string }
     >({
-      query: (body) => ({
-        url: "/auth/reset-password",
-        method: "POST",
-        body,
+      query: ({ token, password }) => ({
+        url: `/auth/reset-password/${token}`,
+        method: "PUT",
+        body: { password },
       }),
     }),
   }),

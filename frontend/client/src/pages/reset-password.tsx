@@ -33,7 +33,7 @@ const ResetPasswordPage: React.FC = () => {
 
     try {
       // token is read from URL, sent in request BODY (not URL param)
-      const res = await resetPassword({ token, newPassword }).unwrap();
+      const res = await resetPassword({ token, password: newPassword }).unwrap();
       toast.success(res.message || "Password reset successfully!");
       setDone(true);
     } catch (err: any) {
@@ -70,7 +70,7 @@ const ResetPasswordPage: React.FC = () => {
         className="z-10 w-full max-w-md px-4"
       >
         <Card className="border-none shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
-          <CardContent className="p-10">
+          <CardContent className="p-6 sm:p-10">
 
             {/* Logo */}
             <div className="flex items-center gap-3 mb-8">

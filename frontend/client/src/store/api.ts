@@ -17,6 +17,8 @@ const baseUrl = viteApiUrl
   ? `${viteApiUrl}/api`
   : "/api";
 
+console.log("API Base URL initialized as:", baseUrl);
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl,
   prepareHeaders: (headers, { getState }) => {

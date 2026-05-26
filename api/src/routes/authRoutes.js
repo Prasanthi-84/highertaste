@@ -33,7 +33,7 @@ router.get('/status', protect, getMe);
 // POST /api/auth/forgot-password  — body: { email }
 router.post('/forgot-password', forgotPassword);
 
-// POST /api/auth/reset-password   — body: { token, newPassword }
-router.post('/reset-password', resetPassword);
+// PUT /api/auth/reset-password/:token   — body: { password }
+router.put('/reset-password/:token', resetPassword);
 
 module.exports = router;

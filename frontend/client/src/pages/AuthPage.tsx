@@ -28,7 +28,22 @@ const AuthPage: React.FC = () => {
       setLocation("/");
     } catch (err: any) {
       console.error("Auth error:", err);
-      toast.error(err.data?.message || err.error || "Authentication failed");
+      
+      let errMsg = "Authentication failed";
+      // Handle RTK Query error structure
+      if (err?.data?.message) {
+        errMsg = err.data.message;
+      } else if (err?.error) {
+        // Handle FETCH_ERROR etc.
+        errMsg = typeof err.error === 'string' ? err.error : (err.error.message || JSON.stringify(err.error));
+      } else if (err?.message) {
+        errMsg = err.message;
+      } else {
+        errMsg = JSON.stringify(err, Object.getOwnPropertyNames(err));
+      }
+      
+      console.error("Full Auth Error Details:", err);
+      toast.error(errMsg);
     }
   };
 
