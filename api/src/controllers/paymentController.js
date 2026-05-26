@@ -498,7 +498,7 @@ const createPaymentLink = async (req, res, next) => {
         try {
             await sendWhatsAppMessage({
                 to: order.customerId.phone,
-                templateName: 'payment_request',
+                templateName: 'hare_krishna_market_payment_request',
                 variables: [order.customerId.name, order.amountDue, paymentLink.short_url]
             });
         } catch (err) {
@@ -539,7 +539,7 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
 
         const response = await sendWhatsAppMessage({
             to: order.customerId.phone,
-            templateName: 'payment_request',
+            templateName: 'hare_krishna_market_payment_request',
             variables: [order.customerId.name, order.amountDue, order.paymentLinkUrl]
         });
 

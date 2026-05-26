@@ -129,7 +129,7 @@ const createOrder = async (req, res, next) => {
         try {
             await sendWhatsAppMessage({
                 to: populated.customerId.phone,
-                templateName: 'order_created',
+                templateName: 'hare_krishna_market_order_confirmation',
                 variables: [
                     populated.customerId.name,
                     populated.orderNumber,
@@ -251,13 +251,13 @@ const updateOrderStatus = async (req, res, next) => {
                 if (status === 'Dispatched') {
                     await sendWhatsAppMessage({
                         to: order.customerId.phone,
-                        templateName: 'order_dispatched',
+                        templateName: 'hare_krishna_market_order_dispatched',
                         variables: [order.customerId.name, order.orderNumber]
                     });
                 } else if (status === 'Delivered') {
                     await sendWhatsAppMessage({
                         to: order.customerId.phone,
-                        templateName: 'order_delivered',
+                        templateName: 'hare_krishna_market_order_delivered',
                         variables: [order.customerId.name, order.orderNumber]
                     });
                 }
@@ -353,7 +353,7 @@ const sendOrderWhatsApp = async (req, res, next) => {
         const phone = order.customerId?.phone;
         if (!phone) return next(createError(400, 'Customer phone number not found'));
 
-        let templateName = 'order_created';
+        let templateName = 'hare_krishna_market_order_confirmation';
         let variables = [
             order.customerId.name, 
             order.orderNumber, 
@@ -361,10 +361,10 @@ const sendOrderWhatsApp = async (req, res, next) => {
         ];
 
         if (template === 'order_dispatched' || template === 'dispatched') {
-            templateName = 'order_dispatched';
+            templateName = 'hare_krishna_market_order_dispatched';
             variables = [order.customerId.name, order.orderNumber];
         } else if (template === 'order_delivered' || template === 'delivered') {
-            templateName = 'order_delivered';
+            templateName = 'hare_krishna_market_order_delivered';
             variables = [order.customerId.name, order.orderNumber];
         }
 

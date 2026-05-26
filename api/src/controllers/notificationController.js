@@ -12,7 +12,7 @@ const sendWhatsApp = async (req, res, next) => {
 
         const result = await sendWhatsAppMessage({ 
             to: phone, 
-            templateName: 'order_created', // Default for legacy/test
+            templateName: 'hare_krishna_market_order_confirmation', // Default for legacy/test
             variables: [phone, "TEST", new Date().toLocaleDateString()] 
         });
 
