@@ -384,6 +384,33 @@ const sendOrderWhatsApp = async (req, res, next) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Delete an order
+// @route   DELETE /api/orders/:id
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+const deleteOrder = async (req, res, next) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id);
+        
+        if (!order) {
+            return next(createError(404, 'Order not found'));
+        }
+
+        // We could also decrement the customer's totalOrders here
+        if (order.customerId) {
+            await Customer.findByIdAndUpdate(order.customerId, { $inc: { totalOrders: -1 } });
+        }
+
+        res.json({
+            success: true,
+            message: 'Order deleted successfully'
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     getOrders,
     createOrder,
@@ -393,4 +420,5 @@ module.exports = {
     archiveOrder,
     exportOrders,
     sendOrderWhatsApp,
+    deleteOrder,
 };

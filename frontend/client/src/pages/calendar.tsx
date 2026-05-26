@@ -138,7 +138,7 @@ export default function CalendarPage() {
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  className="p-0 border rounded-2xl w-full flex justify-center py-4 scale-95"
+                  className="p-3 border rounded-2xl mx-auto flex justify-center [--cell-size:2.5rem]"
                   classNames={{
                     day_selected: "bg-[#5a141e] text-white hover:bg-[#4a1019] focus:bg-[#5a141e] rounded-xl",
                     day_today: "text-[#5a141e] font-black bg-[#5a141e]/5"

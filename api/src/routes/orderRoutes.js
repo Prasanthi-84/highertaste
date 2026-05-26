@@ -9,6 +9,7 @@ const {
     archiveOrder,
     exportOrders,
     sendOrderWhatsApp,
+    deleteOrder,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -23,7 +24,8 @@ router.route('/')
 
 router.route('/:id')
     .get(getOrderById)                       // GET    /api/orders/:id
-    .put(updateOrder);                       // PUT    /api/orders/:id
+    .put(updateOrder)                        // PUT    /api/orders/:id
+    .delete(deleteOrder);                    // DELETE /api/orders/:id
 
 router.patch('/:id/status', updateOrderStatus);   // PATCH /api/orders/:id/status
 router.patch('/:id/archive', archiveOrder);        // PATCH /api/orders/:id/archive
