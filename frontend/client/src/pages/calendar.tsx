@@ -139,7 +139,7 @@ export default function CalendarPage() {
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  className="p-0 bg-transparent flex justify-center [--cell-size:2.5rem]"
+                  className="p-0 bg-transparent flex justify-center [&_.rdp-day]:!min-w-[40px] [&_.rdp-day]:!w-[40px] [&_.rdp-day]:h-[40px] [&_td]:p-0 [&_th]:p-0 [--cell-size:40px]"
                   classNames={{
                     day_selected: "bg-[#5a141e] text-white hover:bg-[#4a1019] focus:bg-[#5a141e] rounded-xl",
                     day_today: "text-[#5a141e] font-black bg-[#5a141e]/5"
