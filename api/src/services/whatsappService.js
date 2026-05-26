@@ -9,11 +9,16 @@ const sendWhatsAppMessage = async ({ to, templateName, variables }) => {
     }
 
     try {
-        const WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-        const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        // Fetch current settings from DB
+        const Settings = require('../models/Settings');
+        const dbSettings = await Settings.findOne();
+        
+        const settings = dbSettings?.integrations?.whatsapp;
+        const WHATSAPP_TOKEN = settings?.enabled && settings?.apiKey ? settings.apiKey : process.env.WHATSAPP_ACCESS_TOKEN;
+        const PHONE_NUMBER_ID = settings?.enabled && settings?.phoneNumberId ? settings.phoneNumberId : process.env.WHATSAPP_PHONE_NUMBER_ID;
 
         if (!WHATSAPP_TOKEN || !PHONE_NUMBER_ID) {
-            logger.error('WhatsApp: Missing API credentials (WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID)');
+            logger.error('WhatsApp: Missing API credentials (not in DB or .env)');
             return { success: false, error: 'WhatsApp credentials not configured' };
         }
 

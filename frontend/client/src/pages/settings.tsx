@@ -68,7 +68,7 @@ export default function Settings() {
   // Integration modal
   const [integrationModal, setIntegrationModal] = useState<"razorpay" | "whatsapp" | null>(null);
   const [razorpayForm, setRazorpayForm] = useState({ keyId: "", keySecret: "" });
-  const [whatsappForm, setWhatsappForm] = useState({ apiKey: "" });
+  const [whatsappForm, setWhatsappForm] = useState({ apiKey: "", phoneNumberId: "", businessAccountId: "" });
   const [showSecret, setShowSecret] = useState(false);
 
   // Seed form state from API data
@@ -85,6 +85,8 @@ export default function Settings() {
       });
       setWhatsappForm({
         apiKey: settings.integrations?.whatsapp?.apiKey || "",
+        phoneNumberId: settings.integrations?.whatsapp?.phoneNumberId || "",
+        businessAccountId: settings.integrations?.whatsapp?.businessAccountId || "",
       });
     }
   }, [settings]);
@@ -284,7 +286,7 @@ export default function Settings() {
               <div className="space-y-0.5">
                 <div className="font-semibold text-slate-800 flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-emerald-600" />
-                  Gupshup WhatsApp API
+                  WhatsApp Cloud API
                   <Badge className={cn(
                     "text-[10px] h-5 font-bold border-none shadow-none",
                     whatsappConnected ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
@@ -293,7 +295,7 @@ export default function Settings() {
                   </Badge>
                 </div>
                 <div className="text-xs text-slate-400 font-medium">
-                  Send automated order updates and payment links. Key: {mask(settings?.integrations?.whatsapp?.apiKey || "")}
+                  Send automated order updates and payment links via Meta.
                 </div>
               </div>
               <Button variant="outline" size="sm" className="border-slate-200 font-bold" onClick={() => setIntegrationModal("whatsapp")}>
@@ -448,13 +450,13 @@ export default function Settings() {
           </DialogHeader>
           <div className="grid gap-5 py-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">API Key</Label>
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Permanent Access Token</Label>
               <div className="relative">
                 <Input
                   type={showSecret ? "text" : "password"}
                   value={whatsappForm.apiKey}
-                  onChange={(e) => setWhatsappForm({ apiKey: e.target.value })}
-                  placeholder="gupshup_api_..."
+                  onChange={(e) => setWhatsappForm({ ...whatsappForm, apiKey: e.target.value })}
+                  placeholder="EAAN..."
                   className="h-11 bg-slate-50 border-slate-200 font-mono text-sm pr-10"
                 />
                 <button
@@ -465,6 +467,24 @@ export default function Settings() {
                   {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Phone Number ID</Label>
+              <Input
+                value={whatsappForm.phoneNumberId}
+                onChange={(e) => setWhatsappForm({ ...whatsappForm, phoneNumberId: e.target.value })}
+                placeholder="e.g. 1159339270595670"
+                className="h-11 bg-slate-50 border-slate-200 font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Business Account ID</Label>
+              <Input
+                value={whatsappForm.businessAccountId}
+                onChange={(e) => setWhatsappForm({ ...whatsappForm, businessAccountId: e.target.value })}
+                placeholder="e.g. 1455363269699058"
+                className="h-11 bg-slate-50 border-slate-200 font-mono text-sm"
+              />
             </div>
           </div>
           <DialogFooter>

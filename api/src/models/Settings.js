@@ -24,7 +24,9 @@ const settingsSchema = new mongoose.Schema({
     },
     whatsapp: {
       enabled: { type: Boolean, default: false },
-      apiKey: { type: String, default: '' }
+      apiKey: { type: String, default: '' },      // Access Token
+      phoneNumberId: { type: String, default: '' },
+      businessAccountId: { type: String, default: '' }
     }
   },
 
