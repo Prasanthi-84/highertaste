@@ -128,48 +128,61 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
         {/* Left Sidebar */}
-        <div className="lg:col-span-4 xl:col-span-3 space-y-6">
-          <Card className="border border-slate-200 shadow-premium bg-white overflow-hidden p-6">
-             <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 text-center">Calendar Navigation</CardTitle>
-             <div className="flex flex-col items-center">
-              <div className="p-4 border rounded-3xl mx-auto flex justify-center bg-white shadow-sm w-fit">
-                <Calendar
+        <div className="lg:col-span-4 xl:col-span-3 space-y-5">
+          {/* Premium Refined Calendar Card */}
+          <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-7 pt-8 pb-7">
+               <Calendar
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  className="p-0 bg-transparent flex justify-center [&_.rdp-day]:!min-w-[40px] [&_.rdp-day]:!w-[40px] [&_.rdp-day]:h-[40px] [&_td]:p-0 [&_th]:p-0 [--cell-size:40px]"
+                  className="w-full p-0"
                   classNames={{
-                    day_selected: "bg-[#5a141e] text-white hover:bg-[#4a1019] focus:bg-[#5a141e] rounded-xl",
-                    day_today: "text-[#5a141e] font-black bg-[#5a141e]/5"
+                    root: "w-full",
+                    months: "flex flex-col",
+                    month: "space-y-6",
+                    month_caption: "flex justify-center relative items-center mb-4",
+                    caption_label: "text-base font-bold text-slate-800",
+                    nav: "flex items-center justify-between absolute inset-x-0 top-0 z-10",
+                    button_previous: "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-full transition-all flex items-center justify-center text-slate-600",
+                    button_next: "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-full transition-all flex items-center justify-center text-slate-600",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex w-full mb-2",
+                    head_cell: "text-slate-400 flex-1 font-bold text-[10px] uppercase tracking-[0.15em] text-center",
+                    row: "flex w-full mt-1",
+                    cell: "flex-1 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                    day: "h-9 w-9 p-0 font-bold aria-selected:opacity-100 hover:bg-slate-100 rounded-full transition-all mx-auto flex items-center justify-center text-slate-700",
+                    day_today: "bg-[#5a141e] text-white hover:bg-[#4a1019] hover:text-white",
+                    day_outside: "text-slate-300 opacity-50 font-normal",
+                    day_disabled: "text-slate-300 opacity-50",
+                    day_hidden: "invisible",
+                  }}
+                  components={{
+                    Chevron: ({ orientation }) => orientation === "left" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
                   }}
                 />
+            </div>
+            
+            {/* Legend section */}
+            <div className="px-6 py-5 border-t border-slate-700/40 space-y-3.5">
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.3em]">Legend</p>
+              <div className="space-y-3">
+                {[
+                  { color: "bg-blue-500", label: "Confirmed Event" },
+                  { color: "bg-orange-400", label: "In Preparation" },
+                  { color: "bg-emerald-500", label: "Ready for Dispatch" },
+                  { color: "bg-slate-500", label: "Draft / Tentative" },
+                ].map(({ color, label }) => (
+                  <div key={label} className="flex items-center gap-3 group/legend cursor-default">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${color} ring-2 ring-offset-1 ring-offset-[#0f172a] ring-transparent group-hover/legend:ring-current transition-all duration-200`} />
+                    <span className="text-[12px] font-medium text-slate-400 group-hover/legend:text-slate-300 transition-colors duration-200">{label}</span>
+                  </div>
+                ))}
               </div>
-             </div>
-             
-             <div className="mt-8 space-y-4 pt-6 border-t border-slate-100">
-               <h3 className="font-black text-[10px] text-slate-400 uppercase tracking-[0.3em]">LEGEND</h3>
-               <div className="space-y-3.5">
-                 <div className="flex items-center gap-3">
-                   <div className="w-2.5 h-2.5 rounded-full bg-blue-600 ring-4 ring-blue-100"></div>
-                   <span className="text-xs font-black text-slate-600">Confirmed Event</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-orange-500 ring-4 ring-orange-100"></div>
-                   <span className="text-xs font-black text-slate-600">In Preparation</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-100"></div>
-                   <span className="text-xs font-black text-slate-600">Ready for Dispatch</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-400 ring-4 ring-slate-100"></div>
-                   <span className="text-xs font-black text-slate-600">Draft / Tentative</span>
-                 </div>
-               </div>
-             </div>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Dynamic View Panel */}

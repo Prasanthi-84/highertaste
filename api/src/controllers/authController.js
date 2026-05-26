@@ -165,18 +165,46 @@ const forgotPassword = async (req, res) => {
         const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
 
         const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #333;">Password Reset Request</h2>
-                <p>You requested a password reset for your account at Higher Taste.</p>
-                <p>Click the button below to reset your password. This link is valid for <strong>10 minutes</strong>.</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${resetUrl}" style="background-color: #5a141e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #3c4043; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .logo { font-size: 24px; font-weight: bold; color: #5a141e; text-decoration: none; }
+                    .content { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+                    .button { display: inline-block; background-color: #5a141e; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 25px 0; }
+                    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #70757a; }
+                    .warning { background: #fffcf0; border-left: 4px solid #f9ab00; padding: 15px; margin-top: 20px; font-size: 13px; color: #665c00; border-radius: 4px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">Higher Taste</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="margin-top: 0; color: #202124;">Reset your password</h2>
+                        <p>We received a request to reset the password for your Higher Taste account. Click the button below to proceed:</p>
+                        <div style="text-align: center;">
+                            <a href="${resetUrl}" class="button">Reset Password</a>
+                        </div>
+                        <div class="warning">
+                            <strong>Security Note:</strong> This link will expire in 10 minutes. If you didn't request this, you can safely ignore this email — your password won't be changed.
+                        </div>
+                        <p style="margin-top: 25px; font-size: 13px; color: #70757a;">
+                            Alternatively, copy and paste this link into your browser: <br>
+                            <a href="${resetUrl}" style="color: #5a141e; word-break: break-all;">${resetUrl}</a>
+                        </p>
+                    </div>
+                    <div class="footer">
+                        &copy; ${new Date().getFullYear()} Higher Taste Catering Operations Hub <br>
+                        Sent to ${user.email}
+                    </div>
                 </div>
-                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-                <p style="font-size: 12px; color: #777;">If the button above doesn't work, copy and paste this link into your browser:</p>
-                <p style="font-size: 12px; color: #777; word-break: break-all;">${resetUrl}</p>
-            </div>
+            </body>
+            </html>
         `;
 
         try {
