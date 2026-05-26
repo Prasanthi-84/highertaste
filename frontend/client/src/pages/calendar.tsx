@@ -134,16 +134,18 @@ export default function CalendarPage() {
           <Card className="border border-slate-200 shadow-premium bg-white overflow-hidden p-6">
              <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 text-center">Calendar Navigation</CardTitle>
              <div className="flex flex-col items-center">
+              <div className="p-4 border rounded-3xl mx-auto flex justify-center bg-white shadow-sm w-fit">
                 <Calendar
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  className="p-4 border rounded-2xl max-w-full w-fit mx-auto bg-white [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 [&_.rdp-day]:text-sm"
+                  className="p-0 bg-transparent flex justify-center [--cell-size:2.5rem]"
                   classNames={{
                     day_selected: "bg-[#5a141e] text-white hover:bg-[#4a1019] focus:bg-[#5a141e] rounded-xl",
                     day_today: "text-[#5a141e] font-black bg-[#5a141e]/5"
                   }}
                 />
+              </div>
              </div>
              
              <div className="mt-8 space-y-4 pt-6 border-t border-slate-100">

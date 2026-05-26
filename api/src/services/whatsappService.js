@@ -59,7 +59,7 @@ const sendWhatsAppMessage = async ({ to, templateName, variables }) => {
                 'Authorization': `Bearer ${WHATSAPP_TOKEN}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 10000
+            timeout: 30000
         });
 
         await WhatsappLog.create({

@@ -229,7 +229,7 @@ export function exportSingleInvoiceToPDF(invoice: Invoice): void {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...LIGHT_TEXT);
-  doc.text("Payment link sent via Gupshup WhatsApp Business", 20, footerY + 11);
+  doc.text("Payment link sent via Meta WhatsApp Cloud API", 20, footerY + 11);
 
   // Bottom Center Text
   doc.setFont("helvetica", "bolditalic");

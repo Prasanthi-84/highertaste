@@ -141,7 +141,7 @@ export default function InvoicePage() {
                 <span className="font-bold">Razorpay Secure Integrated</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Payment Link sent via Gupshup WhatsApp Business
+                Payment Link sent via Meta WhatsApp Cloud API
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">

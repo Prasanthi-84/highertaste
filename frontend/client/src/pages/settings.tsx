@@ -470,7 +470,7 @@ export default function Settings() {
             <DialogTitle className="text-lg font-bold text-[#5a141e] flex items-center gap-2">
               <MessageSquare className="h-5 w-5" /> WhatsApp API Configuration
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400">Enter your Gupshup WhatsApp Business API key.</DialogDescription>
+            <DialogDescription className="text-xs text-slate-400">Enter your Meta WhatsApp Cloud API credentials.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 py-4">
             <div className="space-y-2">
