@@ -15,6 +15,8 @@ export interface SettingsData {
     whatsapp: {
       enabled: boolean;
       apiKey: string;
+      phoneNumberId?: string;
+      businessAccountId?: string;
     };
   };
 

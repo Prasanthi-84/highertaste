@@ -22,12 +22,23 @@ const sendWhatsAppMessage = async ({ to, templateName, variables }) => {
             return { success: false, error: 'WhatsApp credentials not configured' };
         }
 
-        // Clean phone number
-        let cleanPhone = String(to).replace(/[\s\-\(\)\+]/g, '');
-        if (cleanPhone.startsWith('0')) cleanPhone = '91' + cleanPhone.slice(1);
-        if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+        logger.info(`WhatsApp: Using Token ending in ...${WHATSAPP_TOKEN.slice(-4)} and PhoneID: ${PHONE_NUMBER_ID}`);
 
-        const url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
+        // Clean phone number (remove all non-digits)
+        let cleanPhone = String(to).replace(/\D/g, '');
+        
+        // Smarter India logic:
+        // 1. If 10 digits, add 91
+        if (cleanPhone.length === 10) {
+            cleanPhone = '91' + cleanPhone;
+        } 
+        // 2. If 12 digits and starts with 91, it's likely already formatted correctly
+        // 3. If starts with 0 and then 10 digits, replace 0 with 91
+        else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
+            cleanPhone = '91' + cleanPhone.slice(1);
+        }
+
+        const url = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
         
         const data = {
             messaging_product: "whatsapp",
@@ -35,7 +46,7 @@ const sendWhatsAppMessage = async ({ to, templateName, variables }) => {
             type: "template",
             template: {
                 name: templateName,
-                language: { code: "en" },
+                language: { code: "en_US" }, // en_US is more standard for Meta
                 components: variables && variables.length > 0 ? [{
                     type: "body",
                     parameters: variables.map(v => ({ type: "text", text: String(v) }))

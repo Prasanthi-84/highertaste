@@ -69,6 +69,8 @@ export default function Settings() {
   const [integrationModal, setIntegrationModal] = useState<"razorpay" | "whatsapp" | null>(null);
   const [razorpayForm, setRazorpayForm] = useState({ keyId: "", keySecret: "" });
   const [whatsappForm, setWhatsappForm] = useState({ apiKey: "", phoneNumberId: "", businessAccountId: "" });
+  const [testPhone, setTestPhone] = useState("");
+  const [testingWA, setTestingWA] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
 
   // Seed form state from API data
@@ -130,6 +132,28 @@ export default function Settings() {
       setIntegrationModal(null);
     } catch {
       toast.error("Failed to save");
+    }
+  };
+
+  const handleTestWhatsapp = async () => {
+    if (!testPhone) return toast.error("Enter a phone number to test");
+    setTestingWA(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/notifications/whatsapp`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ phone: testPhone, message: "Connection Test" })
+      });
+      const data = await res.json();
+      if (data.success) toast.success("Test message triggered!");
+      else toast.error(data.message || "Test failed");
+    } catch {
+      toast.error("Network error during test");
+    } finally {
+      setTestingWA(false);
     }
   };
 
