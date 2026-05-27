@@ -132,8 +132,8 @@ export default function CalendarPage() {
         {/* Left Sidebar */}
         <div className="lg:col-span-4 xl:col-span-3 space-y-5">
           {/* Premium Refined Calendar Card */}
-          <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-7 pt-8 pb-7">
+          <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="px-6 pt-7 pb-5">
                <Calendar
                   mode="single"
                   selected={date}
@@ -142,22 +142,21 @@ export default function CalendarPage() {
                   classNames={{
                     root: "w-full",
                     months: "flex flex-col",
-                    month: "space-y-6",
-                    month_caption: "flex justify-center relative items-center mb-4",
-                    caption_label: "text-base font-bold text-slate-800",
+                    month: "space-y-5",
+                    month_caption: "flex justify-center relative items-center mb-3",
+                    caption_label: "text-[15px] font-semibold text-slate-800 tracking-tight",
                     nav: "flex items-center justify-between absolute inset-x-0 top-0 z-10",
-                    button_previous: "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-full transition-all flex items-center justify-center text-slate-600",
-                    button_next: "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-full transition-all flex items-center justify-center text-slate-600",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex w-full mb-2",
-                    head_cell: "text-slate-400 flex-1 font-bold text-[10px] uppercase tracking-[0.15em] text-center",
-                    row: "flex w-full mt-1",
-                    cell: "flex-1 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                    day: "h-9 w-9 p-0 font-bold aria-selected:opacity-100 hover:bg-slate-100 rounded-full transition-all mx-auto flex items-center justify-center text-slate-700",
-                    day_today: "bg-[#5a141e] text-white hover:bg-[#4a1019] hover:text-white",
-                    day_outside: "text-slate-300 opacity-50 font-normal",
-                    day_disabled: "text-slate-300 opacity-50",
-                    day_hidden: "invisible",
+                    button_previous: "h-8 w-8 bg-transparent p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all duration-200 flex items-center justify-center active:scale-90",
+                    button_next: "h-8 w-8 bg-transparent p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all duration-200 flex items-center justify-center active:scale-90",
+                    table: "w-full border-collapse",
+                    weekdays: "flex w-full mb-2",
+                    weekday: "text-slate-400 flex-1 font-semibold text-[10px] uppercase tracking-[0.12em] text-center select-none",
+                    week: "flex w-full mt-0.5",
+                    day: "flex-1 text-center text-[13px] p-0.5 relative focus-within:relative focus-within:z-20",
+                    today: "bg-[#5a141e] text-white rounded-full shadow-md shadow-[#5a141e]/20 hover:bg-[#4a1019] hover:text-white font-semibold",
+                    outside: "text-slate-300/70 font-normal",
+                    disabled: "text-slate-200 opacity-50",
+                    hidden: "invisible",
                   }}
                   components={{
                     Chevron: ({ orientation }) => orientation === "left" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
@@ -166,18 +165,18 @@ export default function CalendarPage() {
             </div>
             
             {/* Legend section */}
-            <div className="px-6 py-5 border-t border-slate-700/40 space-y-3.5">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.3em]">Legend</p>
-              <div className="space-y-3">
+            <div className="px-6 py-4 border-t border-slate-100 space-y-3">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Legend</p>
+              <div className="space-y-2.5">
                 {[
                   { color: "bg-blue-500", label: "Confirmed Event" },
                   { color: "bg-orange-400", label: "In Preparation" },
                   { color: "bg-emerald-500", label: "Ready for Dispatch" },
-                  { color: "bg-slate-500", label: "Draft / Tentative" },
+                  { color: "bg-slate-400", label: "Draft / Tentative" },
                 ].map(({ color, label }) => (
-                  <div key={label} className="flex items-center gap-3 group/legend cursor-default">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${color} ring-2 ring-offset-1 ring-offset-[#0f172a] ring-transparent group-hover/legend:ring-current transition-all duration-200`} />
-                    <span className="text-[12px] font-medium text-slate-400 group-hover/legend:text-slate-300 transition-colors duration-200">{label}</span>
+                  <div key={label} className="flex items-center gap-2.5 group/legend cursor-default">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${color} transition-transform duration-200 group-hover/legend:scale-125`} />
+                    <span className="text-[11px] font-medium text-slate-500 group-hover/legend:text-slate-700 transition-colors duration-200">{label}</span>
                   </div>
                 ))}
               </div>
