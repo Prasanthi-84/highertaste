@@ -1,0 +1,9 @@
+﻿client/src/pages/order-details.tsx(315,24): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(616,33): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(627,106): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(628,47): error TS2339: Property 'paymentLinkExpiresAt' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(630,69): error TS2339: Property 'paymentLinkExpiresAt' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(639,78): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
+client/src/pages/order-details.tsx(669,35): error TS2304: Cannot find name 'isSendingWA'.
+client/src/pages/order-details.tsx(677,35): error TS2304: Cannot find name 'isSendingWA'.
+client/src/pages/order-details.tsx(685,35): error TS2304: Cannot find name 'isSendingWA'.
