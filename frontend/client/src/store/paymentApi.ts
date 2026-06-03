@@ -79,7 +79,13 @@ export const paymentApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Payments', 'Invoices', 'Orders'],
     }),
-    createPaymentLink: builder.mutation<{ success: boolean; data: any }, { orderId: string }>({
+    createPaymentLink: builder.mutation<{ 
+      success: boolean; 
+      whatsappSent?: boolean;
+      whatsappError?: string;
+      message?: string;
+      data: any 
+    }, { orderId: string }>({
       query: (body) => ({
         url: '/payments/create-link',
         method: 'POST',

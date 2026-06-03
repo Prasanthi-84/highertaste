@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const generateNumber = require('../utils/generateNumber');
 const { createError } = require('../middleware/errorHandler');
-const { sendWhatsAppMessage } = require('../services/whatsappService');
+const { sendWhatsAppTemplate } = require('../services/wapiService');
 const logger = require('../utils/logger');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,15 +127,16 @@ const createOrder = async (req, res, next) => {
 
         // 🔥 TRIGGER WHATSAPP ORDER CREATED
         try {
-            await sendWhatsAppMessage({
-                to: populated.customerId.phone,
-                templateName: 'hare_krishna_market_order_confirmation',
-                variables: [
-                    populated.customerId.name,
-                    populated.orderNumber,
-                    new Date(populated.eventDate).toLocaleDateString('en-IN')
-                ]
-            });
+            // order_confirmation: customerName, orderId, eventDate, venue, guests, totalAmount
+            const variables = [
+                populated.customerId.name,
+                populated.orderNumber,
+                new Date(populated.eventDate).toLocaleDateString('en-IN'),
+                populated.venue || 'N/A',
+                populated.pax || 'N/A',
+                populated.totalAmount || '0'
+            ];
+            await sendWhatsAppTemplate(populated.customerId.phone, 'order_confirmation', variables);
         } catch (err) {
             logger.error(`[Order Created WhatsApp] Failed: ${err.message}`);
         }
@@ -248,18 +249,17 @@ const updateOrderStatus = async (req, res, next) => {
         // 🔥 TRIGGER WHATSAPP STATUS UPDATE
         if (status) {
             try {
-                if (status === 'Dispatched') {
-                    await sendWhatsAppMessage({
-                        to: order.customerId.phone,
-                        templateName: 'hare_krishna_market_order_dispatched',
-                        variables: [order.customerId.name, order.orderNumber]
-                    });
-                } else if (status === 'Delivered') {
-                    await sendWhatsAppMessage({
-                        to: order.customerId.phone,
-                        templateName: 'hare_krishna_market_order_delivered',
-                        variables: [order.customerId.name, order.orderNumber]
-                    });
+                if (status === 'Dispatched' || status === 'OUT_FOR_DELIVERY') {
+                    // order_dispatched: customerName, orderId, items, deliveryTime, address
+                    const itemsStr = order.lineItems && order.lineItems.length > 0 ? order.lineItems.map(i => i.name).join(', ') : 'Catering Items';
+                    const deliveryTime = order.deliveryDate ? new Date(order.deliveryDate).toLocaleTimeString('en-IN') : 'N/A';
+                    const address = order.venue || 'N/A';
+                    const variables = [order.customerId.name, order.orderNumber, itemsStr, deliveryTime, address];
+                    await sendWhatsAppTemplate(order.customerId.phone, 'order_dispatched', variables);
+                } else if (status === 'Delivered' || status === 'DELIVERED') {
+                    // order_delivered: customerName, orderId
+                    const variables = [order.customerId.name, order.orderNumber];
+                    await sendWhatsAppTemplate(order.customerId.phone, 'order_delivered', variables);
                 }
             } catch (err) {
                 logger.error(`[Status Update WhatsApp] Failed: ${err.message}`);
@@ -353,26 +353,28 @@ const sendOrderWhatsApp = async (req, res, next) => {
         const phone = order.customerId?.phone;
         if (!phone) return next(createError(400, 'Customer phone number not found'));
 
-        let templateName = 'hare_krishna_market_order_confirmation';
+        let templateName = 'order_confirmation';
         let variables = [
             order.customerId.name, 
             order.orderNumber, 
-            new Date(order.eventDate).toLocaleDateString('en-IN')
+            new Date(order.eventDate).toLocaleDateString('en-IN'),
+            order.venue || 'N/A',
+            order.pax || 'N/A',
+            order.totalAmount || '0'
         ];
 
-        if (template === 'order_dispatched' || template === 'dispatched') {
-            templateName = 'hare_krishna_market_order_dispatched';
-            variables = [order.customerId.name, order.orderNumber];
-        } else if (template === 'order_delivered' || template === 'delivered') {
-            templateName = 'hare_krishna_market_order_delivered';
+        if (template === 'order_dispatched' || template === 'dispatched' || template === 'OUT_FOR_DELIVERY') {
+            templateName = 'order_dispatched';
+            const itemsStr = order.lineItems && order.lineItems.length > 0 ? order.lineItems.map(i => i.name).join(', ') : 'Catering Items';
+            const deliveryTime = order.deliveryDate ? new Date(order.deliveryDate).toLocaleTimeString('en-IN') : 'N/A';
+            const address = order.venue || 'N/A';
+            variables = [order.customerId.name, order.orderNumber, itemsStr, deliveryTime, address];
+        } else if (template === 'order_delivered' || template === 'delivered' || template === 'DELIVERED') {
+            templateName = 'order_delivered';
             variables = [order.customerId.name, order.orderNumber];
         }
 
-        const response = await sendWhatsAppMessage({
-            to: phone,
-            templateName,
-            variables
-        });
+        const response = await sendWhatsAppTemplate(phone, templateName, variables);
 
         if (!response.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response.error });

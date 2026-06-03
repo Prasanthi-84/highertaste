@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, FileText, ArrowRight, Loader2, Filter, ExternalLink, PlusCircle, Trash2, CheckCircle2 } from "lucide-react";
+import { Search, Download, FileText, ArrowRight, Loader2, Filter, ExternalLink, PlusCircle, Trash2, CheckCircle2, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +16,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, Globe } from "lucide-react";
-import { useCreatePaymentOrderMutation, useVerifyPaymentMutation } from "@/store/paymentApi";
+import { useCreatePaymentOrderMutation, useVerifyPaymentMutation, useCreatePaymentLinkMutation, useSharePaymentLinkWhatsappMutation } from "@/store/paymentApi";
+import { 
+  useSendOrderConfirmationMutation,
+  useSendPaymentSuccessMutation,
+  useSendOrderDispatchedMutation,
+  useSendOrderDeliveredMutation
+} from "@/store/whatsappApi";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 // Razorpay TS global
 declare global {
@@ -52,6 +64,88 @@ export default function Orders() {
   const [createPaymentOrder, { isLoading: isCreatingRP }] = useCreatePaymentOrderMutation();
   const [verifyPayment] = useVerifyPaymentMutation();
 
+  // WhatsApp API Mutations
+  const [sendConfirmation] = useSendOrderConfirmationMutation();
+  const [sendPaymentSuccess] = useSendPaymentSuccessMutation();
+  const [sendDispatched] = useSendOrderDispatchedMutation();
+  const [sendDelivered] = useSendOrderDeliveredMutation();
+  // Payment Link flow (Razorpay)
+  const [createPaymentLink] = useCreatePaymentLinkMutation();
+  const [sharePaymentLinkWhatsapp] = useSharePaymentLinkWhatsappMutation();
+
+  const handleSendWhatsApp = async (action: string, order: any) => {
+    try {
+      const payload = {
+        phone: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.phone : "",
+        customerName: typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : "",
+        orderId: order.orderNumber || order._id
+      };
+
+      if (!payload.phone) {
+        toast({ title: "Error", description: "Customer phone number is missing.", variant: "destructive" });
+        return;
+      }
+
+      switch (action) {
+        case "confirmation":
+          await sendConfirmation({
+            ...payload,
+            eventDate: order.eventDate ? format(new Date(order.eventDate), "dd MMM yyyy") : "N/A",
+            venue: order.venue || "N/A",
+            guests: order.pax || "N/A",
+            totalAmount: order.totalAmount || 0
+          }).unwrap();
+          toast({ title: "WhatsApp Sent", description: "Order confirmation sent successfully." });
+          break;
+        case "payment_link":
+          // If order already has a saved Razorpay link, just resend it via WhatsApp
+          if (order.paymentLinkUrl) {
+            await sharePaymentLinkWhatsapp(order._id).unwrap();
+            toast({ title: "WhatsApp Sent", description: "Existing payment link resent successfully." });
+          } else {
+            // Generate a fresh Razorpay payment link and auto-send via WhatsApp
+            const result = await createPaymentLink({ orderId: order._id }).unwrap();
+            if (result.whatsappSent === false) {
+              toast({ 
+                title: "Payment Link Created — WhatsApp Failed", 
+                description: `Razorpay link: ${result.data?.link}. WA error: ${result.whatsappError}`, 
+                variant: "destructive" 
+              });
+            } else {
+              toast({ title: "Payment Link Sent", description: "Razorpay payment link generated and sent via WhatsApp." });
+            }
+          }
+          break;
+        case "payment_success":
+           await sendPaymentSuccess({
+            ...payload,
+            amount: order.amountPaid,
+            paymentDate: new Date().toLocaleDateString()
+          }).unwrap();
+          toast({ title: "WhatsApp Sent", description: "Payment receipt sent successfully." });
+          break;
+        case "dispatched":
+          const itemsStr = order.lineItems && order.lineItems.length > 0 
+            ? order.lineItems.map((i: any) => i.name).join(", ") 
+            : "Catering Items";
+          await sendDispatched({
+            ...payload,
+            items: itemsStr,
+            deliveryTime: order.deliveryDate ? format(new Date(order.deliveryDate), "hh:mm a") : "Soon",
+            address: order.venue || "N/A"
+          }).unwrap();
+          toast({ title: "WhatsApp Sent", description: "Dispatch notification sent successfully." });
+          break;
+        case "delivered":
+          await sendDelivered(payload).unwrap();
+          toast({ title: "WhatsApp Sent", description: "Delivery confirmation sent successfully." });
+          break;
+      }
+    } catch (err: any) {
+      toast({ title: "WhatsApp Error", description: err?.data?.message || err?.message || "Failed to send WhatsApp.", variant: "destructive" });
+    }
+  };
+
   const orders = ordersData?.data || [];
   const acceptedQuotes = quotesData?.data || [];
 
@@ -61,7 +155,7 @@ export default function Orders() {
       headers.join(","),
       ...orders.map((o: any) => [
         o.orderNumber || o._id,
-        `"${o.customerId?.name || o.customerName || "—"}"`,
+        `"${o.customerId?.name || o.customerName || "-"}"`,
         `"${o.venue}"`,
         o.totalAmount,
         o.status,
@@ -336,12 +430,12 @@ export default function Orders() {
                   </TableCell>
                   <TableCell className="py-2 px-1">
                     <div className="flex flex-col">
-                      <span className="font-bold text-gray-900 leading-none mb-0.5 text-sm">{typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : order.customerName || "—"}</span>
+                      <span className="font-bold text-gray-900 leading-none mb-0.5 text-sm">{typeof order.customerId === 'object' && order.customerId !== null ? order.customerId.name : order.customerName || "-"}</span>
                       <span className="text-[9px] text-gray-500 font-medium truncate max-w-[180px]">{order.venue}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs font-medium text-gray-600 px-1">
-                    {order.eventDate ? format(new Date(order.eventDate), "dd MMM yyyy") : "—"}
+                    {order.eventDate ? format(new Date(order.eventDate), "dd MMM yyyy") : "â€”"}
                   </TableCell>
                   <TableCell className="text-right px-1">
                     <div className="flex flex-col items-end">
@@ -390,6 +484,35 @@ export default function Orders() {
                            <CreditCard className="h-3.5 w-3.5" />
                         </Button>
                       )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-emerald-600 hover:text-white hover:bg-emerald-600 bg-gray-50"
+                            title="Send WhatsApp Update"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100">
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp("confirmation", order)} className="cursor-pointer py-2">
+                            Send Order Confirmation
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp("payment_link", order)} disabled={order.amountDue === 0} className="cursor-pointer py-2">
+                            Send Payment Link
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp("payment_success", order)} disabled={order.amountPaid === 0} className="cursor-pointer py-2">
+                            Send Payment Receipt
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp("dispatched", order)} className="cursor-pointer py-2">
+                            Mark as Dispatched
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp("delivered", order)} className="cursor-pointer py-2">
+                            Mark as Delivered
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -410,4 +533,5 @@ export default function Orders() {
     </div>
   );
 }
+
 

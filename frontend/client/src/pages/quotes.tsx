@@ -16,7 +16,8 @@ import {
   MessageSquare, 
   Filter,
   CheckCircle2,
-  Edit2
+  Edit2,
+  MessageCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
@@ -30,7 +31,7 @@ import {
   DialogFooter, 
   DialogDescription 
 } from "@/components/ui/dialog";
-import { useGetQuotesQuery, useConvertQuoteToOrderMutation } from "@/store/quoteApi";
+import { useGetQuotesQuery, useConvertQuoteToOrderMutation, useSendQuoteWhatsappMutation } from "@/store/quoteApi";
 import { format } from "date-fns";
 
 export default function Quotes() {
@@ -42,18 +43,17 @@ export default function Quotes() {
 
   const { data: quotesData, isLoading } = useGetQuotesQuery({ search: searchTerm });
   const [convertQuoteToOrder, { isLoading: isConverting }] = useConvertQuoteToOrderMutation();
+  const [sendQuoteWhatsapp, { isLoading: isSendingWA }] = useSendQuoteWhatsappMutation();
 
   const quotes = quotesData?.data || [];
 
-  const handleWhatsAppShare = (quote: any) => {
-    const customerName = quote.customerId?.name || "Customer";
-    const phone = quote.customerId?.phone || "";
-    const total = quote.totalAmount?.toLocaleString() || "0";
-    
-    const message = `Hello ${customerName}, here is your catering quotation from The Higher Taste. Quote ID: ${quote.quoteNumber}. Total: ₹${total}. Please contact us for any changes. Thank you!`;
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
-    toast.success("WhatsApp sharing initiated");
+  const handleWhatsAppShare = async (quote: any) => {
+    try {
+      await sendQuoteWhatsapp(quote._id).unwrap();
+      toast.success(`Quotation WhatsApp sent to ${quote.customerId?.name || 'customer'}`);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send WhatsApp.");
+    }
   };
 
   const handleConvert = async (data: any) => {
@@ -179,6 +179,16 @@ export default function Quotes() {
                                  <ArrowRightLeft className="h-3 w-3 mr-2" /> Convert
                               </Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#5a141e] bg-gray-50" onClick={() => setLocation(`/quotes/${quote._id}`)}><Edit2 className="h-4 w-4" /></Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="font-bold text-green-600 hover:bg-green-600 hover:text-white bg-gray-50 h-8"
+                                onClick={() => handleWhatsAppShare(quote)}
+                                disabled={isSendingWA}
+                                title="Send Quote via WhatsApp"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </Button>
                             </>
                           ) : (
                             <Link href={`/orders/${quote.convertedToOrderId?._id || quote.convertedToOrderId}`}>

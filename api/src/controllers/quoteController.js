@@ -137,15 +137,18 @@ const createQuote = async (req, res, next) => {
         const populated = await quote.populate('customerId', 'name phone email company');
 
         // 🔥 TRIGGER WHATSAPP QUOTATION
-        const { sendQuotationTemplate } = require('../services/whatsappService');
+        const { sendWhatsAppTemplate } = require('../services/wapiService');
         try {
-            await sendQuotationTemplate(
-                populated.customerId.name,
-                populated.eventName,
-                populated.quoteNumber,
-                populated.totalAmount,
-                populated.customerId.phone
-            );
+            const isMarriage = populated.eventName && /marriage|wedding/i.test(populated.eventName);
+            if (isMarriage) {
+                // enquiry_quotation variables: customerName, quoteNo, amount
+                const variables = [populated.customerId.name, populated.quoteNumber, populated.totalAmount];
+                await sendWhatsAppTemplate(populated.customerId.phone, 'enquiry_quotation', variables);
+            } else {
+                // quotation_inquiry variables: customerName, serviceType, quoteNo, amount
+                const variables = [populated.customerId.name, populated.eventName || 'Catering', populated.quoteNumber, populated.totalAmount];
+                await sendWhatsAppTemplate(populated.customerId.phone, 'quotation_inquiry', variables);
+            }
         } catch (err) {
             console.error(`[Quote WhatsApp] Failed: ${err.message}`);
         }
@@ -347,17 +350,19 @@ const sendQuoteWhatsApp = async (req, res, next) => {
         const phone = quote.customerId?.phone;
         if (!phone) return next(createError(400, 'Customer phone number not found'));
 
-        const { sendWhatsAppMessage } = require('../services/whatsappService');
-        const response = await sendWhatsAppMessage({
-            to: phone,
-            templateName: 'quotation_v1',
-            variables: [
-                quote.customerId.name,
-                quote.eventName,
-                quote.quoteNumber,
-                `₹${quote.totalAmount}/-`
-            ]
-        });
+        const { sendWhatsAppTemplate } = require('../services/wapiService');
+        const isMarriage = quote.eventName && /marriage|wedding/i.test(quote.eventName);
+        
+        // Match variables with automatic triggers:
+        let templateName = 'quotation_inquiry';
+        let variables = [quote.customerId.name, quote.eventName || 'Catering', quote.quoteNumber, quote.totalAmount];
+        
+        if (isMarriage) {
+            templateName = 'enquiry_quotation';
+            variables = [quote.customerId.name, quote.quoteNumber, quote.totalAmount];
+        }
+
+        const response = await sendWhatsAppTemplate(phone, templateName, variables);
 
         if (!response?.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });

@@ -1,4 +1,5 @@
 const express = require('express');
+// trigger restart 2
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -60,7 +61,7 @@ const kitchenRoutes  = require('./src/routes/kitchenRoutes');   // Step 12
 const feedbackRoutes = require('./src/routes/feedbackRoutes');  // Step 13
 const settingsRoutes = require('./src/routes/settingsRoutes');  // Step 14
 const notificationRoutes = require('./src/routes/notificationRoutes'); // Step 15
-
+const whatsappRoutes = require('./src/routes/whatsappRoutes');
 // ─── Health Check ─────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
     res.json({
@@ -102,6 +103,7 @@ app.use('/api/calendar', calendarRoutes);  // Step 9
 app.use('/api/feedback', feedbackRoutes);  // Step 11
 app.use('/api/settings', settingsRoutes);  // Step 12
 app.use('/api/notifications', notificationRoutes); // Step 15
+app.use('/api/whatsapp', whatsappRoutes);
 // FUTURE MOUNTS (uncomment as implemented):
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────

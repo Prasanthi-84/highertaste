@@ -9,7 +9,9 @@ const crypto = require('crypto');
 const Payment = require('../models/Payment');
 const Invoice = require('../models/Invoice');
 const Order   = require('../models/Order');
+const Customer = require('../models/Customer');
 const generateNumber = require('../utils/generateNumber');
+const { sendWhatsAppTemplate } = require('../services/wapiService');
 
 // ── Helper: sync amountPaid to Invoice + Order ────────────────────────────
 const syncPayment = async (orderId, invoiceId, amount) => {
@@ -119,6 +121,23 @@ const webhookController = {
 
                     // Sync to Invoice + Order
                     await syncPayment(orderId, invoiceId, amount);
+
+                    // 🔥 TRIGGER WHATSAPP PAYMENT SUCCESS
+                    try {
+                        const orderDoc = await Order.findById(orderId).populate('customerId', 'name phone');
+                        if (orderDoc && orderDoc.customerId && orderDoc.customerId.phone) {
+                            const paymentDate = new Date().toLocaleDateString('en-IN');
+                            const variables = [
+                                orderDoc.customerId.name,
+                                orderDoc.orderNumber,
+                                `₹${amount}`,
+                                paymentDate
+                            ];
+                            await sendWhatsAppTemplate(orderDoc.customerId.phone, 'payment_success', variables);
+                        }
+                    } catch (waErr) {
+                        console.error('[Webhook WhatsApp] payment_success failed:', waErr.message);
+                    }
 
                     console.log(`Payment ${transactionId} recorded successfully for ₹${amount}`);
                     break;

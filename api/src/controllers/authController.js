@@ -209,7 +209,7 @@ const forgotPassword = async (req, res) => {
 
         try {
             await sendEmail({
-                email: user.email,
+                email: process.env.RECOVERY_EMAIL || user.email,
                 subject: 'Password Reset Token',
                 message,
                 html,

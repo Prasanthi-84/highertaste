@@ -76,6 +76,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/whatsapp', require('./src/routes/whatsappRoutes'));
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────
 app.use((req, res) => {

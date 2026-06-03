@@ -27,6 +27,7 @@ import './calendarApi';
 import './userApi';
 import './feedbackApi';
 import './notificationApi';
+import './whatsappApi';
 
 import menuReducer from './menuSlice';
 import expenseReducer from './expenseSlice';

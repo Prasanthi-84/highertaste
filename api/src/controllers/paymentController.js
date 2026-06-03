@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const generateNumber = require('../utils/generateNumber');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const { sendWhatsAppTemplate } = require('../services/wapiService');
 const { sendWhatsAppMessage } = require('../services/whatsappService');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -495,19 +496,25 @@ const createPaymentLink = async (req, res, next) => {
         await order.save();
 
         // 🔥 TRIGGER WHATSAPP PAYMENT LINK
+        let waResult = { success: false, error: 'Not attempted' };
         try {
-            await sendWhatsAppMessage({
-                to: order.customerId.phone,
-                templateName: 'hare_krishna_market_payment_request',
-                variables: [order.customerId.name, order.amountDue, paymentLink.short_url]
-            });
+            const variables = [order.customerId.name, order.orderNumber, order.amountDue, paymentLink.short_url];
+            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
+            if (!waResult.success) {
+                logger.error(`[Payment Link WhatsApp] Failed: ${waResult.error}`);
+            }
         } catch (err) {
-            logger.error(`[Payment Link WhatsApp] Failed: ${err.message}`);
+            logger.error(`[Payment Link WhatsApp] Exception: ${err.message}`);
+            waResult = { success: false, error: err.message };
         }
 
         res.json({
             success: true,
-            message: 'Payment link created and sent successfully',
+            whatsappSent: waResult.success,
+            whatsappError: waResult.success ? undefined : waResult.error,
+            message: waResult.success 
+                ? 'Payment link created and sent via WhatsApp successfully'
+                : `Payment link created but WhatsApp failed: ${waResult.error}`,
             data: {
                 link: paymentLink.short_url,
                 id: paymentLink.id,
@@ -536,12 +543,8 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
             return next(createError(400, 'No payment link found for this order. Please generate one first.'));
         }
 
-
-        const response = await sendWhatsAppMessage({
-            to: order.customerId.phone,
-            templateName: 'hare_krishna_market_payment_request',
-            variables: [order.customerId.name, order.amountDue, order.paymentLinkUrl]
-        });
+        const variables = [order.customerId.name, order.orderNumber, order.amountDue, order.paymentLinkUrl];
+        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
 
         if (!response?.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });

@@ -12,18 +12,32 @@ import {
   TrendingUp, 
   Smartphone, 
   Clock,
-  AlertCircle
+  AlertCircle,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "wouter";
-import { useGetPaymentsQuery, useGetSummaryQuery } from "@/store/paymentApi";
+import { useGetPaymentsQuery, useGetSummaryQuery, useSharePaymentLinkWhatsappMutation } from "@/store/paymentApi";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default function Payments() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
   const { data: paymentsData, isLoading: isLoadingPayments, error: paymentError } = useGetPaymentsQuery();
   const { data: summaryData, isLoading: isLoadingSummary } = useGetSummaryQuery();
+  const [sharePaymentLinkWhatsapp, { isLoading: isSendingWA }] = useSharePaymentLinkWhatsappMutation();
+
+  const handleSendPaymentLink = async (orderId: string) => {
+    if (!orderId) { toast({ title: "No Order", description: "No order linked to this payment.", variant: "destructive" }); return; }
+    try {
+      await sharePaymentLinkWhatsapp(orderId).unwrap();
+      toast({ title: "WhatsApp Sent", description: "Payment link sent via WhatsApp." });
+    } catch (err: any) {
+      toast({ title: "WhatsApp Error", description: err?.data?.message || "Failed to send payment link.", variant: "destructive" });
+    }
+  };
 
   const payments = paymentsData?.data || [];
   const summary = summaryData?.data || { totalCollected: 0, upiTotal: 0, pendingReconciliation: 0 };
@@ -235,6 +249,7 @@ export default function Payments() {
                          </Badge>
                       </TableCell>
                       <TableCell className="pr-6 text-right">
+                        <div className="flex justify-end gap-1">
                         {pay.invoiceId ? (
                             <Link href={`/invoices/${pay.invoiceId._id || pay.invoiceId}`}>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-primary">
@@ -244,6 +259,19 @@ export default function Payments() {
                         ) : (
                             <span className="text-[9px] font-bold text-slate-300">N/A</span>
                         )}
+                        {pay.orderId?._id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-green-500 hover:text-green-700"
+                            onClick={() => handleSendPaymentLink(pay.orderId?._id || '')}
+                            disabled={isSendingWA}
+                            title="Send Payment Link via WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
