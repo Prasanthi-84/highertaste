@@ -30,12 +30,19 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
       throw new Error('Invalid phone number provided');
     }
 
-    const wapiToken = process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN;
-    const baseUrl = process.env.WAPI_BASE_URL || 'https://wapi.flaxxa.com/api/v1';
-    const language = process.env.WAPI_LANGUAGE || 'en_US';
+    // Try to get token from settings first
+    const Settings = require('../models/Settings');
+    const dbSettings = await Settings.findOne();
+    const wapiSettings = dbSettings?.integrations?.flaxxaWapi;
+
+    let wapiToken = (wapiSettings?.enabled && wapiSettings?.token) 
+      ? wapiSettings.token 
+      : (process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN);
+    let baseUrl = process.env.WAPI_BASE_URL || 'https://wapi.flaxxa.com/api/v1';
+    let language = process.env.WAPI_LANGUAGE || 'en_US';
 
     if (!wapiToken) {
-      throw new Error('WAPI_TOKEN is not configured');
+      throw new Error('WAPI_TOKEN is not configured in Settings or .env');
     }
 
     // Format variables into the parameters array for body component
@@ -70,11 +77,11 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
     console.log(`[WAPI Service] Success:`, response.data);
 
     // Save log if Covid requires (Optional but requested for detailed logs)
-    if (WhatsappLog) {
+    if (WhatsappLog && response && response.data) {
       await WhatsappLog.create({
         phone: formattedPhone,
-        templateName: templateName,
-        status: 'SUCCESS',
+        type: templateName,
+        status: 'success',
         response: response.data
       }).catch(err => console.error('[WAPI Service] Failed to save DB log:', err.message));
     }
@@ -91,9 +98,9 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
     if (WhatsappLog) {
       await WhatsappLog.create({
         phone: phone,
-        templateName: templateName,
-        status: 'FAILED',
-        error: errorMessage
+        type: templateName,
+        status: 'failed',
+        response: { error: errorMessage } // Map to response so it complies with schema
       }).catch(err => console.error('[WAPI Service] Failed to save DB log:', err.message));
     }
 

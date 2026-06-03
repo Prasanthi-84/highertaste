@@ -18,6 +18,12 @@ export interface SettingsData {
       phoneNumberId?: string;
       businessAccountId?: string;
     };
+    flaxxaWapi?: {
+      enabled: boolean;
+      token: string;
+      connectedNumber: string;
+      templateStatus: string;
+    };
   };
 
   notifications: {

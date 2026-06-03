@@ -27,6 +27,12 @@ const settingsSchema = new mongoose.Schema({
       apiKey: { type: String, default: '' },      // Access Token
       phoneNumberId: { type: String, default: '' },
       businessAccountId: { type: String, default: '' }
+    },
+    flaxxaWapi: {
+      enabled: { type: Boolean, default: false },
+      token: { type: String, default: '' },
+      connectedNumber: { type: String, default: '' },
+      templateStatus: { type: String, default: 'Pending' }
     }
   },
 

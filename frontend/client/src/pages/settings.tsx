@@ -68,7 +68,7 @@ export default function Settings() {
   // Integration modal
   const [integrationModal, setIntegrationModal] = useState<"razorpay" | "whatsapp" | null>(null);
   const [razorpayForm, setRazorpayForm] = useState({ keyId: "", keySecret: "" });
-  const [whatsappForm, setWhatsappForm] = useState({ apiKey: "", phoneNumberId: "", businessAccountId: "" });
+  const [whatsappForm, setWhatsappForm] = useState({ token: "", connectedNumber: "", templateStatus: "" });
   const [testPhone, setTestPhone] = useState("");
   const [testingWA, setTestingWA] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
@@ -86,9 +86,9 @@ export default function Settings() {
         keySecret: settings.integrations?.razorpay?.keySecret || "",
       });
       setWhatsappForm({
-        apiKey: settings.integrations?.whatsapp?.apiKey || "",
-        phoneNumberId: settings.integrations?.whatsapp?.phoneNumberId || "",
-        businessAccountId: settings.integrations?.whatsapp?.businessAccountId || "",
+        token: settings.integrations?.flaxxaWapi?.token || "",
+        connectedNumber: settings.integrations?.flaxxaWapi?.connectedNumber || "",
+        templateStatus: settings.integrations?.flaxxaWapi?.templateStatus || "Pending",
       });
     }
   }, [settings]);
@@ -125,7 +125,7 @@ export default function Settings() {
       await updateSettings({
         integrations: {
           ...settings?.integrations,
-          whatsapp: { enabled: true, ...whatsappForm },
+          flaxxaWapi: { enabled: true, ...whatsappForm },
         } as SettingsData["integrations"],
       }).unwrap();
       toast.success("WhatsApp configuration saved");
@@ -202,7 +202,7 @@ export default function Settings() {
   };
 
   const razorpayConnected = settings?.integrations?.razorpay?.enabled;
-  const whatsappConnected = settings?.integrations?.whatsapp?.enabled;
+  const whatsappConnected = settings?.integrations?.flaxxaWapi?.enabled;
 
   if (isLoading) {
     return (
@@ -310,16 +310,16 @@ export default function Settings() {
               <div className="space-y-0.5">
                 <div className="font-semibold text-slate-800 flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-emerald-600" />
-                  WhatsApp Cloud API
+                  FlaxxaWapi Automation
                   <Badge className={cn(
                     "text-[10px] h-5 font-bold border-none shadow-none",
                     whatsappConnected ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
                   )}>
-                    {whatsappConnected ? "Connected" : "Not Connected"}
+                    {whatsappConnected ? "Connected" : "Disconnected"}
                   </Badge>
                 </div>
                 <div className="text-xs text-slate-400 font-medium">
-                  Send automated order updates and payment links via Meta.
+                  Send automated order updates and payment links via FlaxxaWapi.
                 </div>
               </div>
               <Button variant="outline" size="sm" className="border-slate-200 font-bold" onClick={() => setIntegrationModal("whatsapp")}>
@@ -468,19 +468,19 @@ export default function Settings() {
         <DialogContent className="sm:max-w-[480px] border-none shadow-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-[#5a141e] flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" /> WhatsApp API Configuration
+              <MessageSquare className="h-5 w-5" /> FlaxxaWapi Configuration
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400">Enter your Meta WhatsApp Cloud API credentials.</DialogDescription>
+            <DialogDescription className="text-xs text-slate-400">Enter your FlaxxaWapi configuration to enable WhatsApp automation.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 py-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Permanent Access Token</Label>
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">WAPI Token</Label>
               <div className="relative">
                 <Input
                   type={showSecret ? "text" : "password"}
-                  value={whatsappForm.apiKey}
-                  onChange={(e) => setWhatsappForm({ ...whatsappForm, apiKey: e.target.value })}
-                  placeholder="EAAN..."
+                  value={whatsappForm.token}
+                  onChange={(e) => setWhatsappForm({ ...whatsappForm, token: e.target.value })}
+                  placeholder="212656387069d4dcc8aa..."
                   className="h-11 bg-slate-50 border-slate-200 font-mono text-sm pr-10"
                 />
                 <button
@@ -493,22 +493,25 @@ export default function Settings() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Phone Number ID</Label>
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Connected Number</Label>
               <Input
-                value={whatsappForm.phoneNumberId}
-                onChange={(e) => setWhatsappForm({ ...whatsappForm, phoneNumberId: e.target.value })}
-                placeholder="e.g. 1159339270595670"
+                value={whatsappForm.connectedNumber}
+                onChange={(e) => setWhatsappForm({ ...whatsappForm, connectedNumber: e.target.value })}
+                placeholder="e.g. 919876543210"
                 className="h-11 bg-slate-50 border-slate-200 font-mono text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Business Account ID</Label>
-              <Input
-                value={whatsappForm.businessAccountId}
-                onChange={(e) => setWhatsappForm({ ...whatsappForm, businessAccountId: e.target.value })}
-                placeholder="e.g. 1455363269699058"
-                className="h-11 bg-slate-50 border-slate-200 font-mono text-sm"
-              />
+              <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Template Status</Label>
+              <select
+                className="flex h-11 w-full rounded-md border border-input bg-slate-50 px-3 py-2 text-sm ring-offset-background font-mono"
+                value={whatsappForm.templateStatus}
+                onChange={(e) => setWhatsappForm({ ...whatsappForm, templateStatus: e.target.value })}
+              >
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+              </select>
             </div>
           </div>
           <DialogFooter>
