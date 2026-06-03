@@ -39,13 +39,11 @@ const updateKitchenStatus = async (req, res, next) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        // Map frontend KDS status back to Order model statuses
-        // Confirmed -> Confirmed
-        // In-Prep -> Processing
-        // Ready -> Ready (or Shipped/Delivered)
+        // Map frontend KDS status back to valid Order model status enum values:
+        // ['Draft', 'Confirmed', 'In-Preparation', 'Ready', 'Dispatched', 'Delivered', 'Cancelled']
         let backendStatus = 'Confirmed';
-        if (status === 'In-Prep') backendStatus = 'Processing';
-        if (status === 'Ready') backendStatus = 'Shipped';
+        if (status === 'In-Prep') backendStatus = 'In-Preparation'; // was 'Processing' (invalid)
+        if (status === 'Ready') backendStatus = 'Ready';             // was 'Shipped' (invalid)
 
         const order = await Order.findByIdAndUpdate(
             id,
