@@ -338,6 +338,23 @@ const convertQuoteToOrder = async (req, res, next) => {
 
         const populatedOrder = await order.populate('customerId', 'name phone email company');
 
+        // 🔥 TRIGGER WHATSAPP ORDER CREATED (On Conversion)
+        const { sendWhatsAppTemplate } = require('../services/wapiService');
+        try {
+            // order_confirmation: customerName, orderId, eventDate, venue, guests, totalAmount
+            const variables = [
+                populatedOrder.customerId.name,
+                populatedOrder.orderNumber,
+                populatedOrder.eventDate ? new Date(populatedOrder.eventDate).toLocaleDateString('en-IN') : 'N/A',
+                populatedOrder.venue || 'N/A',
+                populatedOrder.pax || 'N/A',
+                populatedOrder.totalAmount || '0'
+            ];
+            await sendWhatsAppTemplate(populatedOrder.customerId.phone, 'order_confirmation', variables);
+        } catch (err) {
+            console.error(`[Quote Convert WhatsApp] Failed: ${err.message}`);
+        }
+
         res.status(201).json({
             success: true,
             message: `Quote ${quote.quoteNumber} successfully converted to Order ${orderNumber}`,
