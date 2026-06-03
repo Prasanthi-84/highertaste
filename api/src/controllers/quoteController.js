@@ -137,7 +137,7 @@ const createQuote = async (req, res, next) => {
         const populated = await quote.populate('customerId', 'name phone email company');
 
         // 🔥 TRIGGER WHATSAPP QUOTATION
-        const { sendWhatsAppTemplate } = require('../services/wapiService');
+        const { sendWhatsAppTemplate, sendQuotationPDF, getApiBaseUrl } = require('../services/wapiService');
         try {
             const isMarriage = populated.eventName && /marriage|wedding/i.test(populated.eventName);
             if (isMarriage) {
@@ -149,6 +149,21 @@ const createQuote = async (req, res, next) => {
                 const variables = [populated.customerId.name, populated.eventName || 'Catering', populated.quoteNumber, populated.totalAmount];
                 await sendWhatsAppTemplate(populated.customerId.phone, 'quotation_inquiry', variables);
             }
+
+            // Build the public PDF download URL using the reliable env-var helper
+            const apiBase = getApiBaseUrl();
+            const pdfUrl = `${apiBase}/api/quotes/download/${quote._id}`;
+
+            // Send PDF via quotation_pdf template (best-effort — never blocks quote creation)
+            await sendQuotationPDF(
+                populated.customerId.phone,
+                pdfUrl,
+                populated.quoteNumber,
+                populated.customerId.name,
+                populated.eventName || 'Catering',
+                populated.totalAmount
+            );
+
         } catch (err) {
             console.error(`[Quote WhatsApp] Failed: ${err.message}`);
         }
@@ -350,7 +365,7 @@ const sendQuoteWhatsApp = async (req, res, next) => {
         const phone = quote.customerId?.phone;
         if (!phone) return next(createError(400, 'Customer phone number not found'));
 
-        const { sendWhatsAppTemplate } = require('../services/wapiService');
+        const { sendWhatsAppTemplate, sendQuotationPDF } = require('../services/wapiService');
         const isMarriage = quote.eventName && /marriage|wedding/i.test(quote.eventName);
         
         // Match variables with automatic triggers:
@@ -365,16 +380,67 @@ const sendQuoteWhatsApp = async (req, res, next) => {
         const response = await sendWhatsAppTemplate(phone, templateName, variables);
 
         if (!response?.success) {
-            return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });
+            return res.status(500).json({ success: false, message: 'WhatsApp template sending failed', error: response?.error });
+        }
+        
+        // Build the public PDF download URL using the reliable env-var helper
+        const { getApiBaseUrl } = require('../services/wapiService');
+        const apiBase = getApiBaseUrl();
+        const pdfUrl = `${apiBase}/api/quotes/download/${quote._id}`;
+
+        // Send PDF via the quotation_pdf template (best-effort — does not block the response)
+        // The PDF is served via the public GET /api/quotes/download/:id route
+        const docResponse = await sendQuotationPDF(
+            phone,
+            pdfUrl,
+            quote.quoteNumber,
+            quote.customerId.name,
+            quote.eventName || 'Catering',
+            quote.totalAmount
+        );
+
+        if (!docResponse?.success) {
+            // Log the failure but do not return 500 — the template message already succeeded
+            console.warn(`[Quote WA] PDF template failed (non-blocking): ${docResponse?.error}`);
         }
 
         // Optional: Mark quote as "Sent"
         if (quote.status === 'Draft') {
             quote.status = 'Sent';
+            quote.whatsappSent = true;
+            quote.whatsappSentAt = new Date();
+            quote.quotationPdfUrl = pdfUrl;
             await quote.save();
         }
 
-        res.json({ success: true, message: `Quotation WhatsApp sent successfully to ${phone}` });
+        res.json({ success: true, message: `Quotation WhatsApp and PDF sent successfully to ${phone}` });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Download Quote as PDF publicly (for WhatsApp retrieval)
+// @route   GET /api/quotes/download/:id
+// @access  Public
+// ─────────────────────────────────────────────────────────────────────────────
+const downloadQuotePDF = async (req, res, next) => {
+    try {
+        const quote = await Quote.findById(req.params.id)
+            .populate('customerId', 'name company phone email gstin address');
+
+        if (!quote) return next(createError(404, 'Quote not found'));
+
+        const customer = quote.customerId;
+        const { generateQuotePDF } = require('../services/pdfService');
+        const pdfBuffer = await generateQuotePDF(quote, customer);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${quote.quoteNumber}.pdf"`
+        );
+        res.send(pdfBuffer);
     } catch (err) {
         next(err);
     }
@@ -388,4 +454,5 @@ module.exports = {
     deleteQuote,
     convertQuoteToOrder,
     sendQuoteWhatsApp,
+    downloadQuotePDF,
 };

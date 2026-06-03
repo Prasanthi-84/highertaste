@@ -42,6 +42,22 @@ Ensure that you have exactly these templates approved in your Meta / WhatsApp ma
 *   **order_delivered**: Uses 2 variables (`customerName`, `orderId`)
 *   **quotation_inquiry**: Uses 4 variables (`customerName`, `serviceType`, `quoteNo`, `amount`)
 *   **enquiry_quotation**: Uses 3 variables (`customerName`, `quoteNo`, `amount`)
+*   **quotation_pdf** ⭐: Document template for sending PDF quotations. Requires:
+    - **Header**: Document type (1 variable — the PDF file URL is injected automatically)
+    - **Body**: 4 variables — `{{1}}` customerName, `{{2}}` eventName, `{{3}}` quoteNo, `{{4}}` amount
+
+    Example body text:
+    ```
+    Hare Krishna *{{1}}* 🙏
+
+    As requested, please find attached the quotation for *{{2}}*.
+
+    Quote No: *{{3}}*
+    Amount: *₹{{4}}/-*
+
+    This is in reference to your recent request.
+    ```
+    Footer (optional): `Satvata Foods`
 
 The variables must be passed as `body` components in string format, in exactly the expected order. The backend controllers seamlessly map application variables into this sequence.
 
