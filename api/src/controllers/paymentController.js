@@ -489,6 +489,11 @@ const createPaymentLink = async (req, res, next) => {
 
         const paymentLink = await razorpayInstance.paymentLink.create(paymentLinkRequest);
 
+        // --- PAYMENT_LINK_DEBUG_REPORT TASK 2 ---
+        console.log("---- RAZORPAY LINK GENERATION ----");
+        console.log("Generated Razorpay Link Object:", JSON.stringify(paymentLink, null, 2));
+        console.log("Generated Razorpay Link:", paymentLink ? paymentLink.short_url : "NULL/UNDEFINED");
+        console.log("----------------------------------");
         // Save to order
         order.paymentLinkId = paymentLink.id;
         order.paymentLinkUrl = paymentLink.short_url;
@@ -498,8 +503,20 @@ const createPaymentLink = async (req, res, next) => {
         // 🔥 TRIGGER WHATSAPP PAYMENT LINK
         let waResult = { success: false, error: 'Not attempted' };
         try {
+            // --- PAYMENT_LINK_DEBUG_REPORT TASK 3 & 7 ---
+            console.log("---- SENDING TO WHATSAPP SERVICE ----");
+            console.log("Variables mapping:");
+            console.log("body_1 (name):", order.customerId.name);
+            console.log("body_2 (orderId):", order.orderNumber);
+            console.log("body_3 (amount):", order.amountDue);
+            console.log("body_4 (paymentURL):", paymentLink.short_url);
+            console.log("--------------------------------------");
+
+            // Temporarily test with google.com if needed, but TASK 7 says log Razorpay URL first.
+            // TASK 6 expects us to test with static URL if the original fails, but I will log it first.
             const variables = [order.customerId.name, order.orderNumber, order.amountDue, paymentLink.short_url];
-            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
+            
+            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
             if (!waResult.success) {
                 logger.error(`[Payment Link WhatsApp] Failed: ${waResult.error}`);
             }
@@ -544,7 +561,7 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
         }
 
         const variables = [order.customerId.name, order.orderNumber, order.amountDue, order.paymentLinkUrl];
-        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
+        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
 
         if (!response?.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });

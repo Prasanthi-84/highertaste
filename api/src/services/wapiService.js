@@ -67,6 +67,14 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
     console.log(`[WAPI Service] Sending template ${templateName} to ${formattedPhone}`);
     console.log(`[WAPI Service] Payload:`, JSON.stringify(payload));
 
+    if (templateName === 'payment_link') {
+      console.log("---- WAPI API CALL DEBUG (TASK 4) ----");
+      console.log("Endpoint URL:", `${baseUrl}/sendtemplatemessage`);
+      console.log("Headers:", { 'Content-Type': 'application/json' /* Bearer hidden */ });
+      console.log("Payload:", JSON.stringify(payload, null, 2));
+      console.log("--------------------------------------");
+    }
+
     const response = await axios.post(`${baseUrl}/sendtemplatemessage`, payload, {
       headers: {
         'Content-Type': 'application/json'
@@ -94,6 +102,13 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
   } catch (error) {
     const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
     console.error(`[WAPI Service] Error sending ${templateName} to ${phone}: ${errorMessage}`);
+    
+    if (templateName === 'payment_link') {
+       console.log("---- WAPI API ERROR DEBUG (TASK 5) ----");
+       console.log("response.status:", error.response?.status);
+       console.log("response.data / error.response.data:", JSON.stringify(error.response?.data, null, 2));
+       console.log("---------------------------------------");
+    }
     
     if (WhatsappLog) {
       await WhatsappLog.create({
