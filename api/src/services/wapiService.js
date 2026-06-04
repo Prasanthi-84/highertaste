@@ -37,7 +37,7 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
 
     let wapiToken = (wapiSettings?.enabled && wapiSettings?.token) 
       ? wapiSettings.token 
-      : (process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN);
+      : (process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN || '212656387069d4dcc8aa914');
     let baseUrl = process.env.WAPI_BASE_URL || 'https://wapi.flaxxa.com/api/v1';
     let language = process.env.WAPI_LANGUAGE || 'en_US';
 
@@ -172,7 +172,7 @@ const sendQuotationPDF = async (phone, pdfUrl, quoteNumber, customerName = 'Cust
 
     let wapiToken = (wapiSettings?.enabled && wapiSettings?.token)
       ? wapiSettings.token
-      : (process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN);
+      : (process.env.WAPI_TOKEN || process.env.WAPI_API_TOKEN || '212656387069d4dcc8aa914');
     let baseUrl = process.env.WAPI_BASE_URL || 'https://wapi.flaxxa.com/api/v1';
     let language = process.env.WAPI_LANGUAGE || 'en_US';
 
