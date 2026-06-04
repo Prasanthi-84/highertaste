@@ -516,7 +516,7 @@ const createPaymentLink = async (req, res, next) => {
             // TASK 6 expects us to test with static URL if the original fails, but I will log it first.
             const variables = [order.customerId.name, order.orderNumber, order.amountDue, paymentLink.short_url];
             
-            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
+            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
             if (!waResult.success) {
                 logger.error(`[Payment Link WhatsApp] Failed: ${waResult.error}`);
             }
@@ -561,7 +561,7 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
         }
 
         const variables = [order.customerId.name, order.orderNumber, order.amountDue, order.paymentLinkUrl];
-        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
+        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
 
         if (!response?.success) {
             return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });

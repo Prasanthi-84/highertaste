@@ -78,9 +78,27 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
     const response = await axios.post(`${baseUrl}/sendtemplatemessage`, payload, {
       headers: {
         'Content-Type': 'application/json'
-        // 'Authorization': `Bearer ${wapiToken}` // Just in case, some platforms allow both
       }
     });
+
+    console.log(`[WAPI Service] Raw response:`, JSON.stringify(response.data));
+
+    // FlaxxaWapi returns HTTP 200 even for unknown/unapproved templates,
+    // but sets message_wamid to null when the template was not sent.
+    // Treat this as a real failure so callers can surface the error.
+    if (response.data && response.data.message_wamid === null) {
+      const silentError = `Template "${templateName}" was rejected by FlaxxaWapi (message_wamid is null). Check that the template is approved and the name matches exactly.`;
+      console.error(`[WAPI Service] Silent failure: ${silentError}`);
+      if (WhatsappLog) {
+        await WhatsappLog.create({
+          phone: formattedPhone,
+          type: templateName,
+          status: 'failed',
+          response: { error: silentError }
+        }).catch(err => console.error('[WAPI Service] Failed to save DB log:', err.message));
+      }
+      return { success: false, error: silentError };
+    }
 
     console.log(`[WAPI Service] Success:`, response.data);
 
