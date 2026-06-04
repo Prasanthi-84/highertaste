@@ -42,7 +42,7 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
     let language = process.env.WAPI_LANGUAGE || 'en_US';
 
     if (!wapiToken) {
-      throw new Error('WAPI_TOKEN is not configured in Settings or .env');
+      throw new Error('WhatsApp not configured: Go to Settings → Integrations → FlaxxaWapi and save your WAPI token, or add WAPI_TOKEN to Railway environment variables.');
     }
 
     // Format variables into the parameters array for body component
