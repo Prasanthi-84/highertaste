@@ -564,7 +564,7 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
         const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
 
         if (!response?.success) {
-            return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response?.error });
+            return res.status(500).json({ success: false, message: response?.error || 'WhatsApp sending failed', error: response?.error });
         }
 
         res.json({ success: true, message: 'Payment link shared successfully via WhatsApp' });

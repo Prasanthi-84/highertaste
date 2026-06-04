@@ -377,7 +377,7 @@ const sendOrderWhatsApp = async (req, res, next) => {
         const response = await sendWhatsAppTemplate(phone, templateName, variables);
 
         if (!response.success) {
-            return res.status(500).json({ success: false, message: 'WhatsApp sending failed', error: response.error });
+            return res.status(500).json({ success: false, message: response?.error || 'WhatsApp sending failed', error: response?.error });
         }
 
         res.json({ success: true, message: `Order WhatsApp notification (${templateName}) sent successfully to ${phone}` });

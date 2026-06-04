@@ -15,7 +15,7 @@ const sendOrderConfirmation = async (req, res) => {
     const variables = [customerName, orderId, eventDate, venue, guests, totalAmount];
     const result = await sendWhatsAppTemplate(phone, 'order_confirmation', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Order confirmation sent successfully' });
   } catch (error) {
@@ -29,7 +29,7 @@ const sendPaymentLink = async (req, res) => {
     const variables = [customerName, orderId, amount, paymentURL];
     const result = await sendWhatsAppTemplate(phone, 'payment_request', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Payment link sent successfully' });
   } catch (error) {
@@ -43,7 +43,7 @@ const sendPaymentSuccess = async (req, res) => {
     const variables = [customerName, orderId, amount, paymentDate];
     const result = await sendWhatsAppTemplate(phone, 'payment_success', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Payment success sent successfully' });
   } catch (error) {
@@ -57,7 +57,7 @@ const sendOrderDispatched = async (req, res) => {
     const variables = [customerName, orderId, items, deliveryTime, address];
     const result = await sendWhatsAppTemplate(phone, 'order_dispatched', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Order dispatched sent successfully' });
   } catch (error) {
@@ -71,7 +71,7 @@ const sendOrderDelivered = async (req, res) => {
     const variables = [customerName, orderId];
     const result = await sendWhatsAppTemplate(phone, 'order_delivered', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Order delivered sent successfully' });
   } catch (error) {
@@ -85,7 +85,7 @@ const sendQuotation = async (req, res) => {
     const variables = [customerName, serviceType, quoteNo, amount];
     const result = await sendWhatsAppTemplate(phone, 'quotation_inquiry', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Quotation sent successfully' });
   } catch (error) {
@@ -99,7 +99,7 @@ const sendMarriageQuotation = async (req, res) => {
     const variables = [customerName, quoteNo, amount];
     const result = await sendWhatsAppTemplate(phone, 'enquiry_quotation', variables);
     if (!result.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send WhatsApp', error: result.error });
+      return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }
     res.status(200).json({ success: true, message: 'Marriage quotation sent successfully' });
   } catch (error) {
