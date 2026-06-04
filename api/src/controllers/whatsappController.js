@@ -27,7 +27,7 @@ const sendPaymentLink = async (req, res) => {
   try {
     const { phone, customerName, orderId, amount, paymentURL } = req.body;
     const variables = [customerName, orderId, amount, paymentURL];
-    const result = await sendWhatsAppTemplate(phone, 'payment_request', variables);
+    const result = await sendWhatsAppTemplate(phone, 'payment_link', variables);
     if (!result.success) {
       return res.status(500).json({ success: false, message: result.error || 'Failed to send WhatsApp', error: result.error });
     }

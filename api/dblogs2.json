@@ -1,0 +1,40 @@
+﻿[dotenv@17.3.1] injecting env (20) from .env -- tip: ≡ƒ¢í∩╕Å auth for agents: https://vestauth.com
+[
+  {
+    "_id": "6a21292293af60ef0aa70ca7",
+    "phone": "919110732459",
+    "type": "payment_link",
+    "status": "success",
+    "response": {
+      "status": "success",
+      "message_id": 10033091,
+      "message_wamid": "wamid.HBgMOTE5MTEwNzMyNDU5FQIAERgSMTEzQjRGRUZCODI0OTJERkU1AA=="
+    },
+    "timestamp": "2026-06-04T07:28:34.523Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a212a1e14a321d3beae7a6d",
+    "phone": "918247806856",
+    "type": "payment_link",
+    "status": "success",
+    "response": {
+      "status": "success",
+      "message_id": 10033182,
+      "message_wamid": "wamid.HBgMOTE4MjQ3ODA2ODU2FQIAERgSODgwQTc0RjY0N0VERUNENUU1AA=="
+    },
+    "timestamp": "2026-06-04T07:32:46.434Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a212a5214a321d3beae7a73",
+    "phone": "8247806856",
+    "type": "payment_link",
+    "status": "failed",
+    "response": {
+      "error": "read ECONNRESET"
+    },
+    "timestamp": "2026-06-04T07:33:38.048Z",
+    "__v": 0
+  }
+]
