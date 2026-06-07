@@ -94,7 +94,7 @@ export function exportSingleInvoiceToPDF(invoice: Invoice): void {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
   doc.setTextColor(...MAROON_TEXT);
-  doc.text("The Higher Taste", 20, 25);
+  doc.text("The Satvata Foods", 20, 25);
   doc.setFontSize(9);
   doc.setTextColor(...LIGHT_TEXT);
   doc.text("CATERING SERVICES", 20, 30, { charSpace: 1 });
@@ -235,11 +235,11 @@ export function exportSingleInvoiceToPDF(invoice: Invoice): void {
   doc.setFont("helvetica", "bolditalic");
   doc.setFontSize(10);
   doc.setTextColor(...MAROON_TEXT);
-  doc.text("\"Higher Taste - Serving Satvik Excellence\"", pageW/2, pageH - 18, { align: "center" });
+  doc.text("\"Satvata Foods - Serving Satvik Excellence\"", pageW/2, pageH - 18, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...LIGHT_TEXT);
-  doc.text("Computer generated invoice. ISKCON Delhi - Higher Taste Unit.", pageW/2, pageH - 13, { align: "center" });
+  doc.text("Computer generated invoice. ISKCON Delhi - Satvata Foods Unit.", pageW/2, pageH - 13, { align: "center" });
 
   doc.save(`${invoice.invoiceNumber}.pdf`);
 }
@@ -260,7 +260,7 @@ export function exportInvoicesToPDF(invoices: Invoice[], title = "Invoice Summar
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("The Higher Taste — Invoice Report", 10, 12);
+  doc.text("The Satvata Foods — Invoice Report", 10, 12);
   
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
@@ -304,7 +304,7 @@ export function exportSingleOrderToPDF(order: any): void {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
   doc.setTextColor(...MAROON_TEXT);
-  doc.text("The Higher Taste", 20, 25);
+  doc.text("The Satvata Foods", 20, 25);
   doc.setFontSize(9);
   doc.setTextColor(...LIGHT_TEXT);
   doc.text("CATERING SERVICES", 20, 30, { charSpace: 1 });

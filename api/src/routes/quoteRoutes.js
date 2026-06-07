@@ -8,8 +8,12 @@ const {
     deleteQuote,
     convertQuoteToOrder,
     sendQuoteWhatsApp,
+    downloadQuotePDF,
 } = require('../controllers/quoteController');
 const { protect } = require('../middleware/authMiddleware');
+
+// Public route for PDF download
+router.get('/download/:id', downloadQuotePDF);
 
 // All quote routes require authentication
 router.use(protect);

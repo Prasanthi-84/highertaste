@@ -13,9 +13,17 @@ const PDFDocument = require('pdfkit');
  * @param {Object} customer - Customer document
  * @returns {Promise<Buffer>} PDF binary buffer
  */
-const generateInvoicePDF = (invoice, customer) => {
+const generateInvoicePDF = (data, customer) => {
     return new Promise((resolve, reject) => {
         try {
+            const isQuote = !!data.quoteNumber;
+            const docTitle = isQuote ? 'QUOTATION' : 'INVOICE';
+            const numLabel = isQuote ? 'Quote #:' : 'Invoice #:';
+            const numValue = isQuote ? data.quoteNumber : data.invoiceNumber;
+            const dtValue = isQuote ? data.createdAt : data.date;
+            const dueLabel = isQuote ? 'Valid Until:' : 'Due Date:';
+            const dueValue = isQuote ? data.validUntil : data.dueDate;
+
             const doc = new PDFDocument({ margin: 50, size: 'A4' });
             const buffers = [];
 
@@ -24,12 +32,12 @@ const generateInvoicePDF = (invoice, customer) => {
             doc.on('error', reject);
 
             // ── Header ───────────────────────────────────────────────────
-            doc.fontSize(22).font('Helvetica-Bold').text('INVOICE', 50, 50);
+            doc.fontSize(22).font('Helvetica-Bold').text(docTitle, 50, 50);
             doc.fontSize(10).font('Helvetica')
-                .text(`Invoice #: ${invoice.invoiceNumber}`, 50, 80)
-                .text(`Date: ${new Date(invoice.date).toLocaleDateString('en-IN')}`, 50, 95)
-                .text(`Due Date: ${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-IN') : 'N/A'}`, 50, 110)
-                .text(`Status: ${invoice.status}`, 50, 125);
+                .text(`${numLabel} ${numValue}`, 50, 80)
+                .text(`Date: ${dtValue ? new Date(dtValue).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')}`, 50, 95)
+                .text(`${dueLabel} ${dueValue ? new Date(dueValue).toLocaleDateString('en-IN') : 'N/A'}`, 50, 110)
+                .text(`Status: ${data.status}`, 50, 125);
 
             // ── Company Info (right side) ─────────────────────────────────
             doc.font('Helvetica-Bold').text('HKM Catering Services', 350, 50, { align: 'right' })
@@ -52,7 +60,7 @@ const generateInvoicePDF = (invoice, customer) => {
 
             // ── Order Ref ─────────────────────────────────────────────────
             doc.font('Helvetica-Bold').text('Order Ref:', 350, 160, { align: 'right' })
-                .font('Helvetica').text(invoice.orderId?.orderNumber || 'N/A', 350, 175, { align: 'right' });
+                .font('Helvetica').text(data.orderId?.orderNumber || data.convertedToOrderId?.orderNumber || 'N/A', 350, 175, { align: 'right' });
 
             // ── Line Items Table ──────────────────────────────────────────
             const tableTop = 270;
@@ -69,7 +77,7 @@ const generateInvoicePDF = (invoice, customer) => {
 
             // Table rows
             let y = tableTop + 25;
-            (invoice.lineItems || []).forEach((item) => {
+            (data.lineItems || []).forEach((item) => {
                 doc.font('Helvetica').fontSize(9)
                     .text(item.name,                                        50,  y, { width: 270 })
                     .text(item.qty.toString(),                              330, y)
@@ -87,16 +95,16 @@ const generateInvoicePDF = (invoice, customer) => {
 
             doc.font('Helvetica').fontSize(10)
                 .text('Sub Total:',      col1, y, { width: 100, align: 'right' })
-                .text(`₹${invoice.subTotal.toLocaleString('en-IN')}`,   col1, y, { width: 160, align: 'right' });
+                .text(`₹${data.subTotal.toLocaleString('en-IN')}`,   col1, y, { width: 160, align: 'right' });
             y += 18;
 
-            doc.text(`GST (${invoice.taxRate}%):`, col1, y, { width: 100, align: 'right' })
-                .text(`₹${invoice.taxAmount.toLocaleString('en-IN')}`,  col1, y, { width: 160, align: 'right' });
+            doc.text(`GST (${data.taxRate}%):`, col1, y, { width: 100, align: 'right' })
+                .text(`₹${data.taxAmount.toLocaleString('en-IN')}`,  col1, y, { width: 160, align: 'right' });
             y += 18;
 
-            if (invoice.discountAmount > 0) {
+            if (data.discountAmount > 0) {
                 doc.text('Discount:',   col1, y, { width: 100, align: 'right' })
-                    .text(`-₹${invoice.discountAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                    .text(`-₹${data.discountAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
                 y += 18;
             }
 
@@ -105,24 +113,26 @@ const generateInvoicePDF = (invoice, customer) => {
 
             doc.font('Helvetica-Bold').fontSize(11)
                 .text('Total Amount:', col1, y, { width: 100, align: 'right' })
-                .text(`₹${invoice.totalAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                .text(`₹${data.totalAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
             y += 20;
 
-            doc.font('Helvetica').fontSize(10)
-                .text('Amount Paid:', col1, y, { width: 100, align: 'right' })
-                .text(`₹${invoice.amountPaid.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
-            y += 18;
+            if (!isQuote) {
+                doc.font('Helvetica').fontSize(10)
+                    .text('Amount Paid:', col1, y, { width: 100, align: 'right' })
+                    .text(`₹${(data.amountPaid || 0).toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                y += 18;
 
-            doc.font('Helvetica-Bold').fillColor('red')
-                .text('Balance Due:', col1, y, { width: 100, align: 'right' })
-                .text(`₹${invoice.balance.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
-            doc.fillColor('black');
+                doc.font('Helvetica-Bold').fillColor('red')
+                    .text('Balance Due:', col1, y, { width: 100, align: 'right' })
+                    .text(`₹${(data.balance || data.totalAmount).toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                doc.fillColor('black');
+            }
 
             // ── Notes ─────────────────────────────────────────────────────
-            if (invoice.notes) {
+            if (data.notes) {
                 y += 40;
                 doc.font('Helvetica-Bold').fontSize(10).text('Notes:', 50, y);
-                doc.font('Helvetica').fontSize(9).text(invoice.notes, 50, y + 15, { width: 495 });
+                doc.font('Helvetica').fontSize(9).text(data.notes, 50, y + 15, { width: 495 });
             }
 
             // ── Footer ────────────────────────────────────────────────────
@@ -136,4 +146,6 @@ const generateInvoicePDF = (invoice, customer) => {
     });
 };
 
-module.exports = { generateInvoicePDF };
+const generateQuotePDF = generateInvoicePDF;
+
+module.exports = { generateInvoicePDF, generateQuotePDF };

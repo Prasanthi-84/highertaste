@@ -1,0 +1,18 @@
+{
+  "enquiry_quotation_doc:true_params:3": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "enquiry_quotation_doc:false_params:3": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "enquiry_quotation_doc:true_params:4": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "enquiry_quotation_doc:false_params:4": {
+    "status": "error",
+    "message": "Invalid template"
+  }
+}

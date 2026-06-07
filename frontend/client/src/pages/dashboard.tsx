@@ -150,7 +150,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-[#5a141e]">Operations Hub</h1>
-          <p className="text-muted-foreground mt-2 text-lg font-medium">Hare Krishna! Welcome to The Higher Taste central management.</p>
+          <p className="text-muted-foreground mt-2 text-lg font-medium">Hare Krishna! Welcome to The Satvata Foods central management.</p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>

@@ -510,7 +510,7 @@ export default function InvoiceDetails() {
 
         <CardFooter className="bg-slate-50/50 p-8 border-t border-slate-200">
            <div className="flex flex-col md:flex-row justify-between items-center w-full gap-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-              <span>The Higher Taste | Satvik Catering</span>
+              <span>The Satvata Foods | Satvik Catering</span>
               <span className="text-primary">Official GST Compliant Document</span>
               <span>Electronic Receipt Generated</span>
            </div>

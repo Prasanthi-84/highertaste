@@ -57,10 +57,10 @@ export function Sidebar() {
     <div className="flex h-screen w-64 flex-col border-r bg-sidebar text-sidebar-foreground">
       <div className="flex h-20 items-center border-b border-sidebar-border px-4 py-2">
         <div className="flex items-center gap-3 overflow-hidden">
-          <img src={logoImg} alt="Higher Taste" className="h-12 w-auto object-contain bg-white rounded p-1" />
+          <img src={logoImg} alt="Satvata Foods" className="h-12 w-auto object-contain bg-white rounded p-1" />
           <div className="flex flex-col">
-            <span className="font-bold text-lg leading-tight tracking-tight">The Higher</span>
-            <span className="font-bold text-lg leading-tight tracking-tight text-primary-foreground/80">Taste</span>
+            <span className="font-bold text-lg leading-tight tracking-tight">Satvata</span>
+            <span className="font-bold text-lg leading-tight tracking-tight text-primary-foreground/80">Foods</span>
           </div>
         </div>
       </div>

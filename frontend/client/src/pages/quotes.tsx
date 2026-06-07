@@ -17,7 +17,8 @@ import {
   Filter,
   CheckCircle2,
   Edit2,
-  MessageCircle
+  MessageCircle,
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
@@ -182,12 +183,23 @@ export default function Quotes() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="font-bold text-green-600 hover:bg-green-600 hover:text-white bg-gray-50 h-8"
+                                className="font-bold text-green-600 hover:bg-green-600 hover:text-white bg-gray-50 h-8 px-2"
                                 onClick={() => handleWhatsAppShare(quote)}
                                 disabled={isSendingWA}
-                                title="Send Quote via WhatsApp"
+                                title={quote.whatsappSent ? "Resend Quote via WhatsApp" : "Send Quote via WhatsApp"}
                               >
-                                <MessageCircle className="h-3.5 w-3.5" />
+                                <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                {quote.whatsappSent ? "Resend WA" : "Send WA"}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="font-bold text-blue-600 hover:bg-blue-600 hover:text-white bg-gray-50 h-8 px-2"
+                                onClick={() => window.open(`/api/quotes/download/${quote._id}`, "_blank")}
+                                title="Preview PDF"
+                              >
+                                <FileText className="h-3.5 w-3.5 mr-1" />
+                                Preview PDF
                               </Button>
                             </>
                           ) : (

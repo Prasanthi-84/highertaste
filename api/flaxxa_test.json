@@ -1,0 +1,10 @@
+{
+  "with_document": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "no_document": {
+    "status": "error",
+    "message": "Invalid template"
+  }
+}

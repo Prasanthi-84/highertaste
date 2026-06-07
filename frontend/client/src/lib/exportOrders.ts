@@ -129,7 +129,7 @@ export function exportOrdersToPDF(
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("🌿 The Higher Taste", 10, 13);
+  doc.text("🌿 The Satvata Foods", 10, 13);
 
   // Report title on right
   doc.setFontSize(11);
@@ -266,7 +266,7 @@ export function exportOrdersToPDF(
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `The Higher Taste — Catering Operations  |  Page ${i} of ${totalPages}`,
+      `The Satvata Foods — Catering Operations  |  Page ${i} of ${totalPages}`,
       pageW / 2,
       pageH - 3,
       { align: "center" }
@@ -289,7 +289,7 @@ export function exportSingleOrderToPDF(order: Order): void {
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("The Higher Taste", 10, 13);
+  doc.text("The Satvata Foods", 10, 13);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("Satvik Catering & Events", 10, 19);
@@ -445,13 +445,13 @@ export function exportSingleOrderToPDF(order: Order): void {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text("Thank you for choosing The Higher Taste!", pageW / 2, pageH - 8, {
+  doc.text("Thank you for choosing The Satvata Foods!", pageW / 2, pageH - 8, {
     align: "center",
   });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.text(
-    "Satvik Catering & Events  |  info@highertaste.in",
+    "Satvik Catering & Events  |  info@satvatafoods.in",
     pageW / 2,
     pageH - 3,
     { align: "center" }

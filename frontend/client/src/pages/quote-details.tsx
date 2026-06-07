@@ -37,7 +37,7 @@ const quoteSchema = z.object({
   venue: z.string().min(1, "Venue is required"),
   pax: z.coerce.number().min(1, "Pax must be at least 1"),
   validUntil: z.string().min(1, "Expiry date is required"),
-  status: z.enum(["Draft", "Sent", "Accepted", "Rejected"]),
+  status: z.enum(["Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"]),
   notes: z.string().optional(),
   taxRate: z.coerce.number().min(0),
   discountAmount: z.coerce.number().min(0),
@@ -389,10 +389,45 @@ export default function QuoteDetails() {
                     disabled={isSendingWhatsApp}
                 >
                     {isSendingWhatsApp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Send via WhatsApp
+                    {quoteData?.data?.whatsappSent ? "Resend via WhatsApp" : "Send Quote via WhatsApp"}
                 </Button>
+                {isEditMode && (
+                  <Button 
+                      type="button"
+                      variant="outline"
+                      className="w-full font-bold h-11"
+                      onClick={() => window.open(`/api/quotes/download/${id}`, "_blank")}
+                  >
+                      Preview PDF
+                  </Button>
+                )}
               </CardFooter>
             </Card>
+
+            {/* WA Status Card */}
+            {isEditMode && (
+              <Card className="border-none shadow-sm mb-6 bg-white">
+                 <CardHeader className="bg-gray-50/50 rounded-t-lg pb-3"><CardTitle className="text-xs uppercase tracking-widest text-gray-400">WhatsApp Delivery</CardTitle></CardHeader>
+                 <CardContent className="pt-4 space-y-3">
+                   <div className="flex justify-between text-sm">
+                     <span className="text-gray-500">Template Sent:</span>
+                     <span className="font-bold">{quoteData?.data?.whatsappSent ? "✅ Yes" : "❌ No"}</span>
+                   </div>
+                   <div className="flex justify-between text-sm">
+                     <span className="text-gray-500">PDF Sent:</span>
+                     <span className="font-bold">{quoteData?.data?.pdfSent ? "✅ Yes" : "❌ No"}</span>
+                   </div>
+                   {quoteData?.data?.whatsappSentAt && (
+                     <div className="flex justify-between text-sm">
+                       <span className="text-gray-500">Last Sent:</span>
+                       <span className="font-bold text-[#5a141e] text-xs">
+                         {format(new Date(quoteData.data.whatsappSentAt), "dd MMM yyyy, hh:mm a")}
+                       </span>
+                     </div>
+                   )}
+                 </CardContent>
+              </Card>
+            )}
 
             <Card className="border-none shadow-sm bg-gray-50/50">
                <CardHeader className="bg-gray-50/50 rounded-t-lg"><CardTitle className="text-xs uppercase tracking-widest text-gray-400">Status & Options</CardTitle></CardHeader>

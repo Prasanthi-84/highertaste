@@ -43,9 +43,9 @@ export default function InvoicePage() {
           <div className="flex justify-between items-start">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <img src={logoImg} alt="Higher Taste" className="h-16 w-auto" />
+                <img src={logoImg} alt="Satvata Foods" className="h-16 w-auto" />
                 <div>
-                  <h1 className="text-3xl font-bold text-primary leading-none">The Higher Taste</h1>
+                  <h1 className="text-3xl font-bold text-primary leading-none">The Satvata Foods</h1>
                   <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mt-1">Catering Services</p>
                 </div>
               </div>
@@ -151,8 +151,8 @@ export default function InvoicePage() {
           </div>
 
           <div className="text-center pt-8 border-t border-primary/10">
-            <p className="text-base font-bold text-primary italic">"Higher Taste - Serving Satvik Excellence"</p>
-            <p className="text-[10px] text-muted-foreground mt-2 italic">Computer generated invoice. ISKCON Delhi - Higher Taste Unit.</p>
+            <p className="text-base font-bold text-primary italic">"Satvata Foods - Serving Satvik Excellence"</p>
+            <p className="text-[10px] text-muted-foreground mt-2 italic">Computer generated invoice. ISKCON Delhi - Satvata Foods Unit.</p>
           </div>
         </CardContent>
       </Card>

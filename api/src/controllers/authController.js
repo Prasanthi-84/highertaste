@@ -182,11 +182,11 @@ const forgotPassword = async (req, res) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <div class="logo">Higher Taste</div>
+                        <div class="logo">Satvata Foods</div>
                     </div>
                     <div class="content">
                         <h2 style="margin-top: 0; color: #202124;">Reset your password</h2>
-                        <p>We received a request to reset the password for your Higher Taste account. Click the button below to proceed:</p>
+                        <p>We received a request to reset the password for your Satvata Foods account. Click the button below to proceed:</p>
                         <div style="text-align: center;">
                             <a href="${resetUrl}" class="button">Reset Password</a>
                         </div>
@@ -199,7 +199,7 @@ const forgotPassword = async (req, res) => {
                         </p>
                     </div>
                     <div class="footer">
-                        &copy; ${new Date().getFullYear()} Higher Taste Catering Operations Hub <br>
+                        &copy; ${new Date().getFullYear()} Satvata Foods Catering Operations Hub <br>
                         Sent to ${user.email}
                     </div>
                 </div>

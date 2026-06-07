@@ -1,0 +1,18 @@
+{
+  "quotation_inquiry_no_doc": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "quotation_inquiry_with_doc": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "quotation_pdf_with_doc": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "quotation_pdf_no_doc": {
+    "status": "error",
+    "message": "Invalid template"
+  }
+}

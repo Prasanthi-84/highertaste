@@ -4,7 +4,7 @@ const settingsSchema = new mongoose.Schema({
   // Branding & Profile
   businessName: {
     type: String,
-    default: 'The Higher Taste - ISKCON Catering'
+    default: 'The Satvata Foods - ISKCON Catering'
   },
   gstin: {
     type: String,

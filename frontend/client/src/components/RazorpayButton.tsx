@@ -97,7 +97,7 @@ export const RazorpayButton: React.FC<RazorpayButtonProps> = ({
         amount: rzpOrder.amount,
         currency: rzpOrder.currency,
         order_id: rzpOrder.id,
-        name: "The Higher Taste",
+        name: "The Satvata Foods",
         description: `Order #${orderNumber}`,
         image: "/logo.png",
         handler: function (response: any) {

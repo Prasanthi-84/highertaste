@@ -62,6 +62,10 @@ const quoteSchema = new mongoose.Schema(
             ref: 'Order',
             default: null,
         },
+        whatsappSent: { type: Boolean, default: false },
+        whatsappSentAt: { type: Date, default: null },
+        pdfSent: { type: Boolean, default: false },
+        pdfSentAt: { type: Date, default: null },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

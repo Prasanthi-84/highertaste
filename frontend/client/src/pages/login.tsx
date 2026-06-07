@@ -72,10 +72,10 @@ const LoginPage: React.FC = () => {
                 
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
-                    <img src={logoImg} alt="Higher Taste" className="h-10 w-auto bg-white rounded p-1" />
+                    <img src={logoImg} alt="Satvata Foods" className="h-10 w-auto bg-white rounded p-1" />
                     <div className="text-white">
-                      <p className="font-bold text-xl leading-tight">The Higher</p>
-                      <p className="font-medium text-white/70">Taste</p>
+                      <p className="font-bold text-xl leading-tight">Satvata</p>
+                      <p className="font-medium text-white/70">Foods</p>
                     </div>
                   </div>
                   
@@ -100,8 +100,8 @@ const LoginPage: React.FC = () => {
               <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
                 <div className="mb-10 block md:hidden">
                   <div className="flex items-center gap-3 mb-2">
-                    <img src={logoImg} alt="Higher Taste" className="h-8 w-auto bg-primary rounded p-1" />
-                    <h1 className="text-2xl font-bold text-primary">The Higher Taste</h1>
+                    <img src={logoImg} alt="Satvata Foods" className="h-8 w-auto bg-primary rounded p-1" />
+                    <h1 className="text-2xl font-bold text-primary">The Satvata Foods</h1>
                   </div>
                 </div>
 
@@ -120,7 +120,7 @@ const LoginPage: React.FC = () => {
                       <Input 
                         id="email" 
                         type="email" 
-                        placeholder="arjun@highertaste.com" 
+                        placeholder="arjun@satvatafoods.com" 
                         className="pl-10 h-12 bg-white border-muted focus-visible:ring-primary/20 focus-visible:border-primary transition-all rounded-xl"
                         required
                         value={email}

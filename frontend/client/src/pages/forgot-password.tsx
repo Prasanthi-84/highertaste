@@ -52,9 +52,9 @@ const ForgotPasswordPage: React.FC = () => {
 
             {/* Logo */}
             <div className="flex items-center gap-3 mb-8">
-              <img src={logoImg} alt="Higher Taste" className="h-9 w-auto bg-primary rounded p-1" />
+              <img src={logoImg} alt="Satvata Foods" className="h-9 w-auto bg-primary rounded p-1" />
               <div>
-                <p className="font-bold text-primary text-base leading-tight">The Higher Taste</p>
+                <p className="font-bold text-primary text-base leading-tight">The Satvata Foods</p>
                 <p className="text-muted-foreground text-xs">Catering Ops Hub</p>
               </div>
             </div>

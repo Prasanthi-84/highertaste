@@ -71,10 +71,10 @@ const AuthPage: React.FC = () => {
 
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-10">
-                    <img src={logoImg} alt="Higher Taste" className="h-10 w-auto bg-white rounded p-1" />
+                    <img src={logoImg} alt="Satvata Foods" className="h-10 w-auto bg-white rounded p-1" />
                     <div className="text-white">
-                      <p className="font-bold text-xl leading-tight">The Higher</p>
-                      <p className="font-medium text-white/70">Taste</p>
+                      <p className="font-bold text-xl leading-tight">Satvata</p>
+                      <p className="font-medium text-white/70">Foods</p>
                     </div>
                   </div>
                   <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
@@ -98,8 +98,8 @@ const AuthPage: React.FC = () => {
               <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
                 {/* Mobile logo */}
                 <div className="mb-8 flex items-center gap-3 md:hidden">
-                  <img src={logoImg} alt="Higher Taste" className="h-8 w-auto bg-primary rounded p-1" />
-                  <h1 className="text-xl font-bold text-primary">The Higher Taste</h1>
+                  <img src={logoImg} alt="Satvata Foods" className="h-8 w-auto bg-primary rounded p-1" />
+                  <h1 className="text-xl font-bold text-primary">The Satvata Foods</h1>
                 </div>
 
                 <div className="mb-8">
