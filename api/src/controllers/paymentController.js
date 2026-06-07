@@ -461,7 +461,7 @@ const createPaymentLink = async (req, res, next) => {
         const razorpayInstance = initRazorpay();
         if (!razorpayInstance) return next(createError(500, 'Razorpay configuration error'));
 
-        const expireDate = Math.floor((Date.now() + 20 * 60 * 1000) / 1000); // 20 mins from now in seconds
+        const expireDate = Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000); // 24 hours from now in seconds
 
         const paymentLinkRequest = {
             amount: Math.round(order.amountDue * 100), // paise
