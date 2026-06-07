@@ -24,7 +24,7 @@ import { useGetMenuQuery } from "@/store/menuApi";
 import { useCreatePaymentOrderMutation, useVerifyPaymentMutation, useCreatePaymentLinkMutation, useSharePaymentLinkWhatsappMutation } from "@/store/paymentApi";
 import { useSendWhatsappMutation } from "@/store/notificationApi";
 import { exportSingleOrderToPDF } from "@/lib/exportInvoices";
-import { MessageSquare, CreditCard, ExternalLink, QrCode, Copy, Share2 } from "lucide-react";
+import { MessageSquare, CreditCard, ExternalLink, QrCode, Copy, Share2, RefreshCw } from "lucide-react";
 
 // Add Razorpay type for TS
 declare global {
@@ -633,6 +633,24 @@ export default function OrderDetails() {
                               )}
                           </div>
                           <div className="flex gap-2 shrink-0">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                title="Regenerate Link"
+                                className="h-9 w-9 border-rose-100 text-rose-600 hover:bg-rose-50"
+                                onClick={async () => {
+                                  try {
+                                    await createPaymentLink({ orderId: orderData.data._id }).unwrap();
+                                    toast({ title: "Link Regenerated", description: "A fresh 24h payment link was generated." });
+                                    refetch();
+                                  } catch (err: any) {
+                                    toast({ title: "Error", description: err.data?.message || "Failed to regenerate link", variant: "destructive" });
+                                  }
+                                }}
+                                disabled={isCreatingLink}
+                              >
+                                  {isCreatingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                              </Button>
                               <Button 
                                 variant="outline" 
                                 size="icon" 
