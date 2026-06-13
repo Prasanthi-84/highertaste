@@ -152,8 +152,8 @@ export default function FeedbackPage() {
     try {
       await deleteFeedback(id).unwrap();
       toast.success("Feedback deleted");
-    } catch (err) {
-      toast.error("Failed to delete");
+    } catch (err: any) {
+      toast.error(err?.data?.message || err.message || "Failed to delete");
     }
   };
 

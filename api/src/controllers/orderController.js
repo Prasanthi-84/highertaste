@@ -26,7 +26,15 @@ const getOrders = async (req, res, next) => {
         const query = { isArchived: isArchived === 'true' };
 
         if (status) query.status = status;
-        if (paymentStatus) query.paymentStatus = paymentStatus;
+        if (paymentStatus) {
+            if (paymentStatus.toUpperCase() === 'PAID' || paymentStatus === 'Paid') {
+                query.paymentStatus = 'Paid';
+            } else if (paymentStatus.toUpperCase() === 'PENDING' || paymentStatus === 'Due' || paymentStatus === 'Unpaid') {
+                query.paymentStatus = { $in: ['Unpaid', 'Partially Paid'] };
+            } else {
+                query.paymentStatus = paymentStatus;
+            }
+        }
 
         // Date range filter on eventDate
         if (fromDate || toDate) {

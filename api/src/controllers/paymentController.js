@@ -88,10 +88,9 @@ const createRazorpayOrder = async (req, res, next) => {
             data: razorpayOrder,
         });
     } catch (err) {
-        logger.error(`Razorpay Error: ${err.message}`, { error: err });
-        
-        const description = (err.error && err.error.description) || err.message || 'unknown error';
-        next(createError(500, `Razorpay error: ${description}`));
+        const errorDesc = (err.error && err.error.description) || (err.error && err.error.message) || err.message || 'unknown error';
+        logger.error(`Razorpay Error: ${errorDesc}`, { error: err });
+        next(createError(500, `Razorpay error: ${errorDesc}`));
     }
 };
 
@@ -468,7 +467,7 @@ const createPaymentLink = async (req, res, next) => {
             currency: "INR",
             accept_partial: false,
             expire_by: expireDate,
-            reference_id: order.orderNumber,
+            reference_id: `${order.orderNumber}_${Date.now()}`,
             description: `Payment for Order #${order.orderNumber} - ${order.eventName}`,
             customer: {
                 name: order.customerId.name,
@@ -540,8 +539,9 @@ const createPaymentLink = async (req, res, next) => {
         });
 
     } catch (err) {
-        logger.error(`Razorpay Payment Link Error: ${err.message}`);
-        next(createError(500, `Razorpay error: ${err.message}`));
+        const errorDesc = (err.error && err.error.description) || err.message || 'Unknown Payment Provider Error';
+        logger.error(`Razorpay Payment Link Error: ${errorDesc}`);
+        next(createError(500, `Razorpay error: ${errorDesc}`));
     }
 };
 
