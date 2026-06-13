@@ -12,13 +12,15 @@ import {
   Edit, 
   Filter,
   Loader2,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { Link } from "wouter";
 import { 
   useGetCustomersQuery, 
   useCreateCustomerMutation, 
   useUpdateCustomerMutation, 
+  useDeleteCustomerMutation,
   Customer 
 } from "@/store/customerApi";
 import { toast } from "sonner";
@@ -64,6 +66,18 @@ export default function Customers() {
 
   const [createCustomer, { isLoading: isCreating }] = useCreateCustomerMutation();
   const [updateCustomer, { isLoading: isUpdating }] = useUpdateCustomerMutation();
+  const [deleteCustomer] = useDeleteCustomerMutation();
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this customer?")) {
+      try {
+        await deleteCustomer(id).unwrap();
+        toast.success("Customer deleted successfully");
+      } catch (err: any) {
+        toast.error(err.data?.message || err.message || "Failed to delete customer");
+      }
+    }
+  };
 
   // Show error via Toast
   useEffect(() => {
@@ -238,6 +252,9 @@ export default function Customers() {
                           <DropdownMenuContent align="end" className="rounded-lg border-gray-100 shadow-lg p-1 w-36">
                             <DropdownMenuItem onClick={() => handleEdit(customer)} className="font-medium py-2 focus:bg-gray-50 focus:text-[#5a141e] rounded-md cursor-pointer">
                               <Edit className="mr-2 h-4 w-4 opacity-70" /> Edit Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { if(customer._id) handleDelete(customer._id); }} className="font-medium py-2 focus:bg-rose-50 focus:text-rose-600 rounded-md cursor-pointer text-rose-600">
+                              <Trash2 className="mr-2 h-4 w-4 opacity-70" /> Delete Profile
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

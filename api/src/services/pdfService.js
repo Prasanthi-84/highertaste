@@ -77,15 +77,19 @@ const generateInvoicePDF = (data, customer) => {
 
             // Table rows
             let y = tableTop + 25;
-            (data.lineItems || []).forEach((item) => {
-                doc.font('Helvetica').fontSize(9)
-                    .text(item.name,                                        50,  y, { width: 270 })
-                    .text(item.qty.toString(),                              330, y)
-                    .text(`₹${item.unitPrice.toLocaleString('en-IN')}`,    380, y)
-                    .text(`₹${item.total.toLocaleString('en-IN')}`,        470, y);
-                y += 20;
-                if (y > 680) { doc.addPage(); y = 50; }
-            });
+            if (Array.isArray(data.lineItems)) {
+                data.lineItems.forEach((item) => {
+                    const unitPrice = parseFloat(item.unitPrice) || 0;
+                    const total = parseFloat(item.total) || (parseFloat(item.qty)*unitPrice) || 0;
+                    doc.font('Helvetica').fontSize(9)
+                        .text(item.name || 'Item',                              50,  y, { width: 270 })
+                        .text((item.qty || 0).toString(),                       330, y)
+                        .text(`Rs. ${unitPrice.toLocaleString('en-IN')}`,    380, y)
+                        .text(`Rs. ${total.toLocaleString('en-IN')}`,        470, y);
+                    y += 20;
+                    if (y > 680) { doc.addPage(); y = 50; }
+                });
+            }
 
             doc.moveTo(50, y + 5).lineTo(545, y + 5).stroke();
 
@@ -93,18 +97,25 @@ const generateInvoicePDF = (data, customer) => {
             y += 20;
             const col1 = 380, col2 = 545;
 
+            const subTotal = parseFloat(data.subTotal) || 0;
+            const taxAmount = parseFloat(data.taxAmount) || 0;
+            const discountAmount = parseFloat(data.discountAmount) || 0;
+            const totalAmount = parseFloat(data.totalAmount) || 0;
+            const amountPaid = parseFloat(data.amountPaid) || 0;
+            const balance = parseFloat(data.balance) || (totalAmount - amountPaid) || 0;
+
             doc.font('Helvetica').fontSize(10)
                 .text('Sub Total:',      col1, y, { width: 100, align: 'right' })
-                .text(`₹${data.subTotal.toLocaleString('en-IN')}`,   col1, y, { width: 160, align: 'right' });
+                .text(`Rs. ${subTotal.toLocaleString('en-IN')}`,   col1, y, { width: 160, align: 'right' });
             y += 18;
 
-            doc.text(`GST (${data.taxRate}%):`, col1, y, { width: 100, align: 'right' })
-                .text(`₹${data.taxAmount.toLocaleString('en-IN')}`,  col1, y, { width: 160, align: 'right' });
+            doc.text(`GST (${data.taxRate || 0}%):`, col1, y, { width: 100, align: 'right' })
+                .text(`Rs. ${taxAmount.toLocaleString('en-IN')}`,  col1, y, { width: 160, align: 'right' });
             y += 18;
 
-            if (data.discountAmount > 0) {
+            if (discountAmount > 0) {
                 doc.text('Discount:',   col1, y, { width: 100, align: 'right' })
-                    .text(`-₹${data.discountAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                    .text(`-Rs. ${discountAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
                 y += 18;
             }
 
@@ -113,18 +124,18 @@ const generateInvoicePDF = (data, customer) => {
 
             doc.font('Helvetica-Bold').fontSize(11)
                 .text('Total Amount:', col1, y, { width: 100, align: 'right' })
-                .text(`₹${data.totalAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                .text(`Rs. ${totalAmount.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
             y += 20;
 
             if (!isQuote) {
                 doc.font('Helvetica').fontSize(10)
                     .text('Amount Paid:', col1, y, { width: 100, align: 'right' })
-                    .text(`₹${(data.amountPaid || 0).toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                    .text(`Rs. ${amountPaid.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
                 y += 18;
 
                 doc.font('Helvetica-Bold').fillColor('red')
                     .text('Balance Due:', col1, y, { width: 100, align: 'right' })
-                    .text(`₹${(data.balance || data.totalAmount).toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
+                    .text(`Rs. ${balance.toLocaleString('en-IN')}`, col1, y, { width: 160, align: 'right' });
                 doc.fillColor('black');
             }
 

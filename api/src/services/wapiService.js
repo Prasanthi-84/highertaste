@@ -201,7 +201,7 @@ const sendQuotationPDF = async (phone, pdfUrl, quoteNumber, customerName = 'Cust
     const payload = {
       token: wapiToken,
       phone: formattedPhone,
-      template_name: 'quotation_inquiry',
+      template_name: 'quotation_pdf',
       template_language: language,
       components: [
         {

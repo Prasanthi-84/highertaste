@@ -18,6 +18,7 @@ import {
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { useGetOrdersQuery } from "@/store/OrderApi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   format,
   isSameDay,
@@ -37,13 +38,16 @@ type CalendarView = "month" | "week" | "day";
 export default function CalendarPage() {
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<CalendarView>("month");
-  const [statusFilter, setStatusFilter] = useState<string[]>(["Confirmed", "In-Preparation", "Draft", "Ready"]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: ordersResponse, isLoading } = useGetOrdersQuery();
   const orders = ordersResponse?.data || [];
 
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => statusFilter.includes(order.status));
+    return orders.filter(order => {
+      if (statusFilter === "all") return ["Confirmed", "In-Preparation", "Draft", "Ready", "Dispatched", "Delivered"].includes(order.status);
+      return order.status === statusFilter;
+    });
   }, [orders, statusFilter]);
 
   const selectedDateOrders = useMemo(() => {
@@ -85,9 +89,19 @@ export default function CalendarPage() {
           <p className="text-muted-foreground mt-1 text-sm font-medium">Schedule and manage upcoming catering events.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-9 text-[10px] font-black uppercase tracking-widest border-slate-200 px-3 hover:border-primary/50 transition-all">
-            <Filter className="mr-2 h-3.5 w-3.5" /> Dept
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px] h-9 text-[10px] font-black uppercase tracking-widest border-slate-200 hover:border-primary/50 transition-all bg-white">
+              <Filter className="mr-2 h-3.5 w-3.5 text-slate-400" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ALL ACTIVE</SelectItem>
+              <SelectItem value="Confirmed">CONFIRMED</SelectItem>
+              <SelectItem value="In-Preparation">IN-PREP</SelectItem>
+              <SelectItem value="Ready">READY</SelectItem>
+              <SelectItem value="Dispatched">DISPATCHED</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button
@@ -144,7 +158,7 @@ export default function CalendarPage() {
             <MiniCalendar
               selected={date}
               onSelect={(d) => setDate(d)}
-              orders={orders}
+              orders={filteredOrders}
             />
             <CalendarLegend />
           </div>
@@ -242,7 +256,7 @@ export default function CalendarPage() {
                   return days.map((day, idx) => {
                     const isCurrentMonth = isSameMonth(day, date);
                     const isSelected = isSameDay(day, date);
-                    const dayOrders = orders.filter(o => isSameDay(parseISO(o.eventDate), day));
+                    const dayOrders = filteredOrders.filter(o => isSameDay(parseISO(o.eventDate), day));
 
                     return (
                       <div key={idx}
@@ -291,7 +305,7 @@ export default function CalendarPage() {
                   const days = eachDayOfInterval({ start, end: addDays(start, 6) });
 
                   return days.map((day, idx) => {
-                    const dayOrders = orders.filter(o => isSameDay(parseISO(o.eventDate), day));
+                    const dayOrders = filteredOrders.filter(o => isSameDay(parseISO(o.eventDate), day));
                     const isSelected = isSameDay(day, date);
 
                     return (

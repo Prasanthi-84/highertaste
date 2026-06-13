@@ -51,7 +51,8 @@ export default function Orders() {
 
   const { data: ordersData, isLoading } = useGetOrdersQuery({ 
     search: searchTerm,
-    status: statusFilter === "all" ? undefined : statusFilter,
+    status: (statusFilter === "all" || statusFilter === "Completed") ? undefined : statusFilter,
+    isArchived: statusFilter === "Completed" ? true : false,
     paymentStatus: paymentFilter === "all" ? undefined : paymentFilter
   });
   
