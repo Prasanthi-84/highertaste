@@ -76,17 +76,34 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
       text: variable ? variable.toString() : 'N/A'
     }));
 
+    // payment_request template has a URL button ({{1}} = payment URL in button)
+    // Must include the button component separately so the CTA button renders correctly
+    const components = parameters.length > 0 ? [
+      {
+        type: 'body',
+        parameters: parameters
+      }
+    ] : [];
+
+    // If payment_request template: add button component with the payment URL (last variable)
+    if (templateName === 'payment_request' && variables.length >= 4) {
+      const paymentUrl = variables[3] ? variables[3].toString() : '';
+      if (paymentUrl) {
+        components.push({
+          type: 'button',
+          sub_type: 'url',
+          index: '0',
+          parameters: [{ type: 'text', text: paymentUrl }]
+        });
+      }
+    }
+
     const payload = {
       token: wapiToken,
       phone: formattedPhone,
       template_name: templateName,
       template_language: language,
-      components: parameters.length > 0 ? [
-        {
-          type: 'body',
-          parameters: parameters
-        }
-      ] : []
+      components
     };
     console.log(`[WA-DEBUG] ✔ STEP 4 OK: Payload built`);
     console.log(`[WA-DEBUG]   Full payload:`, JSON.stringify(payload, null, 2));

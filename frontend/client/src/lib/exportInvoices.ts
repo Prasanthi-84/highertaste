@@ -18,6 +18,12 @@ function formatINR(amount?: number): string {
   return "₹" + amount.toLocaleString("en-IN");
 }
 
+// PDF-safe version: jsPDF default Helvetica can't render ₹ glyph
+function formatINRPDF(amount?: number): string {
+  if (amount === undefined || amount === null) return "Rs.0";
+  return "Rs." + amount.toLocaleString("en-IN");
+}
+
 // Brand colours
 const BRAND_MAROON = [90, 20, 30] as [number, number, number];
 const BRAND_GOLD = [196, 160, 80] as [number, number, number];
@@ -342,9 +348,9 @@ export function exportSingleOrderToPDF(order: any): void {
   const head = [["Item Description", "Qty", "Price", "Total"]];
   const body = (order.lineItems || []).map((item: any) => [
     item.name || (typeof item.menuItemId === 'object' ? item.menuItemId.name : "Item"),
-    item.qty,
-    formatINR(item.unitPrice),
-    formatINR(item.total || (item.qty * item.unitPrice))
+    String(item.qty || 0),
+    formatINRPDF(item.unitPrice),
+    formatINRPDF(item.total || (item.qty * item.unitPrice))
   ]);
 
   autoTable(doc, {
@@ -353,14 +359,58 @@ export function exportSingleOrderToPDF(order: any): void {
     body,
     theme: "grid",
     headStyles: { fillColor: BRAND_MAROON },
-    styles: { fontSize: 8 }
+    styles: { fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 20, halign: 'center' },
+      2: { cellWidth: 35, halign: 'right' },
+      3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' }
+    }
   });
 
   const finalY = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(14);
+
+  // Summary rows
+  const labelX = 120;
+  const valueX = pageW - 20;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...LIGHT_TEXT);
+  doc.text("Subtotal:", labelX, finalY);
+  doc.text(formatINRPDF(order.subTotal || order.totalAmount), valueX, finalY, { align: "right" });
+
+  if (order.taxAmount) {
+    doc.text(`GST (${order.taxRate || 18}%):`, labelX, finalY + 6);
+    doc.text(formatINRPDF(order.taxAmount), valueX, finalY + 6, { align: "right" });
+  }
+  if (order.discountAmount && order.discountAmount > 0) {
+    doc.text("Discount:", labelX, finalY + 12);
+    doc.text(`-${formatINRPDF(order.discountAmount)}`, valueX, finalY + 12, { align: "right" });
+  }
+
+  // Divider
+  const divY = order.taxAmount ? finalY + 16 : finalY + 10;
+  doc.setDrawColor(...MAROON_TEXT);
+  doc.line(labelX, divY, pageW - 15, divY);
+
+  // Total — big prominent text
+  doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...MAROON_TEXT);
-  doc.text(`Total Amount: ${formatINR(order.totalAmount)}`, pageW - 20, finalY, { align: "right" });
+  doc.text("Total Amount:", labelX, divY + 8);
+  doc.text(formatINRPDF(order.totalAmount), valueX, divY + 8, { align: "right" });
+
+  if (order.amountPaid !== undefined) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(30, 150, 30);
+    doc.text(`Paid: ${formatINRPDF(order.amountPaid)}`, labelX, divY + 16);
+    if (order.amountDue > 0) {
+      doc.setTextColor(200, 0, 0);
+      doc.text(`Due: ${formatINRPDF(order.amountDue)}`, valueX, divY + 16, { align: "right" });
+    }
+  }
 
   doc.save(`Order_${order.orderNumber || order.id}.pdf`);
 }
