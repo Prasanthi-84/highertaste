@@ -80,8 +80,8 @@ const createRazorpayOrder = async (req, res, next) => {
 
         const razorpayOrder = await razorpayInstance.orders.create(options);
         
-        console.log(`[Razorpay] Order created successfully: ${razorpayOrder.id}`);
-        
+        logger.info(`[Razorpay] Order ${razorpayOrder.id} created for catering order ${orderId}`);
+
         return res.json({
             success: true,
             key: process.env.RAZORPAY_KEY_ID,
@@ -488,12 +488,7 @@ const createPaymentLink = async (req, res, next) => {
 
         const paymentLink = await razorpayInstance.paymentLink.create(paymentLinkRequest);
 
-        // --- PAYMENT_LINK_DEBUG_REPORT TASK 2 ---
-        console.log("---- RAZORPAY LINK GENERATION ----");
-        console.log("Generated Razorpay Link Object:", JSON.stringify(paymentLink, null, 2));
-        console.log("Generated Razorpay Link:", paymentLink ? paymentLink.short_url : "NULL/UNDEFINED");
-        console.log("----------------------------------");
-        // Save to order
+        // Save payment link to order
         order.paymentLinkId = paymentLink.id;
         order.paymentLinkUrl = paymentLink.short_url;
         order.paymentLinkExpiresAt = new Date(expireDate * 1000);
@@ -502,17 +497,7 @@ const createPaymentLink = async (req, res, next) => {
         // 🔥 TRIGGER WHATSAPP PAYMENT LINK
         let waResult = { success: false, error: 'Not attempted' };
         try {
-            // --- PAYMENT_LINK_DEBUG_REPORT TASK 3 & 7 ---
-            console.log("---- SENDING TO WHATSAPP SERVICE ----");
-            console.log("Variables mapping:");
-            console.log("body_1 (name):", order.customerId.name);
-            console.log("body_2 (orderId):", order.orderNumber);
-            console.log("body_3 (amount):", order.amountDue);
-            console.log("body_4 (paymentURL):", paymentLink.short_url);
-            console.log("--------------------------------------");
 
-            // Temporarily test with google.com if needed, but TASK 7 says log Razorpay URL first.
-            // TASK 6 expects us to test with static URL if the original fails, but I will log it first.
             const variables = [order.customerId.name, order.orderNumber, order.amountDue, paymentLink.short_url];
             
             waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);

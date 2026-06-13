@@ -81,12 +81,7 @@ export default function Customers() {
 
   // Show error via Toast
   useEffect(() => {
-    if (isError) {
-      console.error("[DEBUG] Customers Fetch Error Details:", {
-        status: (fetchError as any)?.status,
-        data: (fetchError as any)?.data
-      });
-    }
+    // Error is surfaced via the isError flag and shown in the UI
   }, [isError, fetchError]);
 
   // Form State
@@ -139,31 +134,22 @@ export default function Customers() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[DEBUG] Customer Form Submit Triggered");
     
     if (!validate()) {
-      console.warn("[DEBUG] Validation failed:", errors);
       toast.error("Please fill in all required fields marked with *");
       return;
     }
 
     try {
-      console.log("[DEBUG] Submitting Data:", formData);
       if (selectedCustomer?._id) {
         await updateCustomer({ id: selectedCustomer._id, data: formData }).unwrap();
         toast.success("Customer updated successfully");
       } else {
-        const result = await createCustomer(formData).unwrap();
-        console.log("[DEBUG] Create Result:", result);
+        await createCustomer(formData).unwrap();
         toast.success("Added customer successfully");
       }
       setIsSheetOpen(false);
     } catch (err: any) {
-      console.error("[DEBUG] Submission Error Details:", {
-        status: err?.status,
-        data: err?.data,
-        message: err?.message
-      });
       toast.error(err.data?.message || err.message || "An error occurred while saving the customer");
     }
   };

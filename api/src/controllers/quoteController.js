@@ -151,22 +151,17 @@ const createQuote = async (req, res, next) => {
                 populated.totalAmount
             );
 
-            let changed = false;
             if (response.templateResponse?.success) {
                 quote.whatsappSent = true;
                 quote.whatsappSentAt = new Date();
                 quote.status = 'Sent';
                 changed = true;
-            } else {
-                console.warn(`Template failed: ${response.templateResponse?.error}`);
             }
 
             if (response.pdfResponse?.success) {
                 quote.pdfSent = true;
                 quote.pdfSentAt = new Date();
                 changed = true;
-            } else {
-                console.warn(`PDF failed: ${response.pdfResponse?.error}`);
             }
 
             if (changed) {
@@ -174,7 +169,7 @@ const createQuote = async (req, res, next) => {
             }
 
         } catch (err) {
-            console.error(`[Quote WhatsApp] Failed: ${err.message}`);
+            logger.error(`[Quote WhatsApp] Failed: ${err.message}`);
         }
 
         res.status(201).json({
@@ -361,7 +356,7 @@ const convertQuoteToOrder = async (req, res, next) => {
             ];
             await sendWhatsAppTemplate(populatedOrder.customerId.phone, 'order_confirmation', variables);
         } catch (err) {
-            console.error(`[Quote Convert WhatsApp] Failed: ${err.message}`);
+            logger.error(`[Quote Convert WhatsApp] Failed: ${err.message}`);
         }
 
         res.status(201).json({
@@ -382,42 +377,22 @@ const convertQuoteToOrder = async (req, res, next) => {
 // @route   POST /api/quotes/:id/send-whatsapp
 // @access  Private
 // ─────────────────────────────────────────────────────────────────────────────
+const logger = require('../utils/logger');
+
 const sendQuoteWhatsApp = async (req, res, next) => {
     try {
-        console.log(`\n${'#'.repeat(60)}`);
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 1: POST /api/quotes/:id/send-whatsapp HIT`);
-        console.log(`[CTRL-DEBUG]   Quote ID: ${req.params.id}`);
-        console.log(`[CTRL-DEBUG]   User    : ${req.user?.id || 'unknown'}`);
-
         const { id } = req.params;
         const quote = await Quote.findById(id).populate('customerId');
 
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 2: DB lookup done`);
-        if (!quote) {
-            console.error(`[CTRL-DEBUG] ✖ CTRL-STEP 2 FAILED: Quote not found for id=${id}`);
-            return next(createError(404, 'Quote not found'));
-        }
-        console.log(`[CTRL-DEBUG]   Quote found: ${quote.quoteNumber}, status: ${quote.status}`);
+        if (!quote) return next(createError(404, 'Quote not found'));
 
         const phone = quote.customerId?.phone;
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 3: Customer phone = "${phone}"`);
-        console.log(`[CTRL-DEBUG]   Customer name : ${quote.customerId?.name}`);
-        console.log(`[CTRL-DEBUG]   Customer _id  : ${quote.customerId?._id}`);
-        if (!phone) {
-            console.error(`[CTRL-DEBUG] ✖ CTRL-STEP 3 FAILED: No phone on customerId`);
-            return next(createError(400, 'Customer phone number not found'));
-        }
+        if (!phone) return next(createError(400, 'Customer phone number not found'));
 
         const { sendQuotationWithPDF, getApiBaseUrl } = require('../services/wapiService');
         const apiBase = getApiBaseUrl();
         const pdfUrl = `${apiBase}/api/quotes/download/${quote._id}`;
 
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 4: PDF URL built`);
-        console.log(`[CTRL-DEBUG]   API Base: ${apiBase}`);
-        console.log(`[CTRL-DEBUG]   PDF URL : ${pdfUrl}`);
-        console.log(`[CTRL-DEBUG]   (If API Base is localhost, Flaxxa cannot fetch this PDF — URL must be public!)`);
-
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 5: Calling sendQuotationWithPDF...`);
         const response = await sendQuotationWithPDF(
             phone,
             pdfUrl,
@@ -427,20 +402,10 @@ const sendQuoteWhatsApp = async (req, res, next) => {
             quote.totalAmount
         );
 
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 6: sendQuotationWithPDF returned`);
-        console.log(`[CTRL-DEBUG]   templateResponse: ${JSON.stringify(response.templateResponse)}`);
-        console.log(`[CTRL-DEBUG]   pdfResponse     : ${JSON.stringify(response.pdfResponse)}`);
-
         if (!response.templateResponse?.success) {
-            console.error(`[CTRL-DEBUG] ✖ CTRL-STEP 6: Template FAILED → ${response.templateResponse?.error}`);
             return res.status(500).json({ success: false, message: 'WhatsApp template sending failed', error: response.templateResponse?.error });
         }
 
-        if (!response.pdfResponse?.success) {
-            console.warn(`[CTRL-DEBUG] ⚠ CTRL-STEP 6: PDF non-blocking failure → ${response.pdfResponse?.error}`);
-        }
-
-        console.log(`[CTRL-DEBUG] ▶ CTRL-STEP 7: Saving quote flags to DB...`);
         quote.whatsappSent = true;
         quote.whatsappSentAt = new Date();
         if (response.pdfResponse?.success) {
@@ -451,13 +416,9 @@ const sendQuoteWhatsApp = async (req, res, next) => {
             quote.status = 'Sent';
         }
         await quote.save();
-        console.log(`[CTRL-DEBUG] ✔ CTRL-STEP 7: Quote saved. whatsappSent=true, status=${quote.status}`);
-        console.log(`${'#'.repeat(60)}\n`);
 
         res.json({ success: true, message: `Quotation WhatsApp and PDF sent successfully to ${phone}` });
     } catch (err) {
-        console.error(`[CTRL-DEBUG] ✖ EXCEPTION in sendQuoteWhatsApp: ${err.message}`);
-        console.error(err.stack);
         next(err);
     }
 };

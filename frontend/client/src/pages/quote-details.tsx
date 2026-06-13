@@ -118,7 +118,6 @@ export default function QuoteDetails() {
   const total = subtotal - watchDiscount + taxAmount;
 
   const onSubmit = async (data: QuoteFormValues) => {
-    console.log("Submitting Quote Data:", data);
     try {
       // Ensure customerId is just the ID string if it's currently an object
       const cleanCustomerId = typeof data.customerId === 'object' && data.customerId !== null
@@ -137,7 +136,6 @@ export default function QuoteDetails() {
         })),
       };
 
-      console.log("Cleaned Payload for API:", payload);
 
       if (isEditMode) {
         await updateQuote({ id: id!, data: payload as any }).unwrap();
@@ -148,17 +146,11 @@ export default function QuoteDetails() {
       }
       setLocation("/quotes");
     } catch (err: any) {
-      console.error("Quotation Save Error:", err);
       const errorMsg = err.data?.message || err.message || "Failed to save quotation. Please check all fields.";
       toast.error(errorMsg);
     }
   };
 
-  // Log form errors to console for debugging
-  const formErrors = form.formState.errors;
-  if (Object.keys(formErrors).length > 0) {
-    console.warn("Form Validation Errors:", formErrors);
-  }
 
   const [sendQuoteWhatsapp, { isLoading: isSendingWhatsApp }] = useSendQuoteWhatsappMutation();
 
@@ -172,7 +164,6 @@ export default function QuoteDetails() {
       await sendQuoteWhatsapp(id).unwrap();
       toast.success("WhatsApp quotation sent successfully via Meta Cloud API");
     } catch (err: any) {
-      console.error("WhatsApp Send Error:", err);
       toast.error(err.data?.message || "Failed to send WhatsApp message");
     }
   };

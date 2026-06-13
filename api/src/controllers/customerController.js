@@ -17,7 +17,6 @@ const getCustomers = async (req, res, next) => {
             isActive = 'true',
         } = req.query;
 
-        console.log(`[Customers] Fetching: search="${search}", type="${customerType || type}", isActive=${isActive}`);
 
         const query = { isActive: isActive !== 'false' };
 
@@ -58,7 +57,6 @@ const getCustomers = async (req, res, next) => {
             data: customers,
         });
     } catch (err) {
-        console.error('[Customers] Fetch Error:', err.message);
         next(err);
     }
 };

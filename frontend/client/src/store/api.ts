@@ -13,7 +13,6 @@ import { logOut } from "./authSlice";
 // This allows vercel.json rewrites to correctly proxy requests to the Railway backend.
 const baseUrl = "/api";
 
-console.log("API Base URL initialized as:", baseUrl);
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl,

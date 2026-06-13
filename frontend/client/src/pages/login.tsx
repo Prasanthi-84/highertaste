@@ -32,13 +32,10 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await login({ email, password }).unwrap();
-      // Ensure your backend returns { user, token }
-      console.log("Login Success:", response);
+      await login({ email, password }).unwrap();
       toast.success("Welcome back! Redirecting...");
       setLocation("/");
     } catch (err: any) {
-      console.error("Login failed:", err);
       const message = err.data?.message || err.error || "Invalid username or password";
       toast.error(message);
     }

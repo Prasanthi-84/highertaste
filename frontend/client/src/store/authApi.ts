@@ -24,14 +24,8 @@ export const authApi = api.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           dispatch(setCredentials(extractAuthPayload(data)));
-        } catch (err: any) {
-          const errorMessage = err.error?.data?.message || err.error?.message || (typeof err.error === 'string' ? err.error : null) || err.message || JSON.stringify(err);
-          console.error("Login mutation failed details:", {
-            errorMessage,
-            status: err.error?.status,
-            data: err.error?.data,
-            rawError: err
-          });
+        } catch {
+          // Error is surfaced via RTK Query's rejected state
         }
       },
     }),
