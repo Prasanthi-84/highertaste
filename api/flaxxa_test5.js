@@ -1,54 +1,86 @@
 const axios = require('axios');
 const fs = require('fs');
 
-async function testTemplates() {
+async function testFlaxxa() {
   const wapiToken = '212656387069d4dcc8aa914';
   const phone = '919876543210';
   
-  const templatesToTest = [
-    { name: 'enquiry_quotation', hasDoc: true, paramCount: 3 },
-    { name: 'enquiry_quotation', hasDoc: false, paramCount: 3 },
-    { name: 'enquiry_quotation', hasDoc: true, paramCount: 4 },
-    { name: 'enquiry_quotation', hasDoc: false, paramCount: 4 },
-  ];
-
   const results = {};
 
-  for (const t of templatesToTest) {
-    const key = `${t.name}_doc:${t.hasDoc}_params:${t.paramCount}`;
-    const params = Array(t.paramCount).fill({type: 'text', text: 'T'});
-
-    const payload = {
+  try {
+    const resPayment = await axios.post('https://wapi.flaxxa.com/api/v1/sendtemplatemessage', {
       token: wapiToken,
       phone: phone,
-      template_name: t.name,
+      template_name: 'payment_link',
       template_language: 'en_US',
-      components: t.hasDoc ? [
+      components: [
         {
-          type: 'header',
-          parameters: [{type: 'document', document: {link: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', filename: 'dummy.pdf'}}]
+          type: 'body',
+          parameters: [
+            {type: 'text', text: 'Test'},
+            {type: 'text', text: '123'},
+            {type: 'text', text: '100'}
+          ]
         },
         {
-          type: 'body',
-          parameters: params
-        }
-      ] : [
-        {
-          type: 'body',
-          parameters: params
+            type: 'button',
+            sub_type: 'url',
+            index: '0',
+            parameters: [{ type: 'text', text: 'https://google.com' }]
         }
       ]
-    };
-    
-    try {
-      const res = await axios.post('https://wapi.flaxxa.com/api/v1/sendtemplatemessage', payload);
-      results[key] = res.data;
-    } catch(err) {
-      results[key] = err.response?.data || err.message;
-    }
+    });
+    results.payment_link_str = resPayment.data;
+  } catch(e) {
+    results.payment_link_str = e.response?.data || e.message;
   }
 
-  fs.writeFileSync('flaxxa_test_enquiry.json', JSON.stringify(results, null, 2));
+  try {
+    const resPayment1 = await axios.post('https://wapi.flaxxa.com/api/v1/sendtemplatemessage', {
+      token: wapiToken,
+      phone: phone,
+      template_name: 'payment_link',
+      template_language: 'en_US',
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            {type: 'text', text: 'Test'},
+            {type: 'text', text: '123'},
+            {type: 'text', text: '100'}
+          ]
+        }
+      ]
+    });
+    results.payment_link_no_button = resPayment1.data;
+  } catch(e) {
+    results.payment_link_no_button = e.response?.data || e.message;
+  }
+  
+  try {
+    const resPayment2 = await axios.post('https://wapi.flaxxa.com/api/v1/sendtemplatemessage', {
+      token: wapiToken,
+      phone: phone,
+      template_name: 'payment_link',
+      template_language: 'en_US',
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            {type: 'text', text: 'Test'},
+            {type: 'text', text: '123'},
+            {type: 'text', text: '100'},
+            {type: 'text', text: 'google.com'}
+          ]
+        }
+      ]
+    });
+    results.payment_link_4_args = resPayment2.data;
+  } catch(e) {
+    results.payment_link_4_args = e.response?.data || e.message;
+  }
+
+  fs.writeFileSync('flaxxa_test5.json', JSON.stringify(results, null, 2));
 }
 
-testTemplates();
+testFlaxxa();

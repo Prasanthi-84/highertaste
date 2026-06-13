@@ -49,20 +49,8 @@ const sendWhatsAppTemplate = async (phone, templateName, variables) => {
       text: variable ? variable.toString() : 'N/A'
     }));
 
-    // payment_request template has a URL button — must include button component
+    // payment_link template takes 4 body variables (name, order, amount, URL)
     const components = parameters.length > 0 ? [{ type: 'body', parameters }] : [];
-
-    if (templateName === 'payment_request' && variables.length >= 4) {
-      const paymentUrl = variables[3] ? variables[3].toString() : '';
-      if (paymentUrl) {
-        components.push({
-          type: 'button',
-          sub_type: 'url',
-          index: '0',
-          parameters: [{ type: 'text', text: paymentUrl }]
-        });
-      }
-    }
 
     const payload = { token: wapiToken, phone: formattedPhone, template_name: templateName, template_language: language, components };
 
@@ -124,7 +112,7 @@ const sendQuotationPDF = async (phone, pdfUrl, quoteNumber, customerName = 'Cust
     const payload = {
       token: wapiToken,
       phone: formattedPhone,
-      template_name: 'quotation_pdf',
+      template_name: 'quotation_inquiry',
       template_language: language,
       components: [
         {
@@ -148,17 +136,17 @@ const sendQuotationPDF = async (phone, pdfUrl, quoteNumber, customerName = 'Cust
     });
 
     if (response.data?.message_wamid === null) {
-      const silentError = `PDF template "quotation_pdf" rejected by FlaxxaWapi (message_wamid is null). Check template approval + PDF URL accessibility.`;
+      const silentError = `PDF template "quotation_inquiry" rejected by FlaxxaWapi (message_wamid is null). Check template approval + PDF URL accessibility.`;
       logger.error(`[WhatsApp] ${silentError}`);
       if (WhatsappLog) {
-        await WhatsappLog.create({ phone: formattedPhone, type: 'quotation_pdf', status: 'failed', response: { error: silentError } })
+        await WhatsappLog.create({ phone: formattedPhone, type: 'quotation_inquiry', status: 'failed', response: { error: silentError } })
           .catch(err => logger.error('[WhatsApp] Failed to save log:', err.message));
       }
       return { success: false, error: silentError };
     }
 
     if (WhatsappLog && response?.data) {
-      await WhatsappLog.create({ phone: formattedPhone, type: 'quotation_pdf', status: 'success', response: response.data })
+      await WhatsappLog.create({ phone: formattedPhone, type: 'quotation_inquiry', status: 'success', response: response.data })
         .catch(err => logger.error('[WhatsApp] Failed to save log:', err.message));
     }
 
@@ -170,7 +158,7 @@ const sendQuotationPDF = async (phone, pdfUrl, quoteNumber, customerName = 'Cust
     logger.error(`[WhatsApp] sendQuotationPDF failed: ${errorMessage}`);
 
     if (WhatsappLog) {
-      await WhatsappLog.create({ phone, type: 'quotation_pdf', status: 'failed', response: { error: errorMessage } })
+      await WhatsappLog.create({ phone, type: 'quotation_inquiry', status: 'failed', response: { error: errorMessage } })
         .catch(err => logger.error('[WhatsApp] Failed to save log:', err.message));
     }
 

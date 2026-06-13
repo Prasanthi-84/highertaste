@@ -1,0 +1,20 @@
+{
+  "quotation_inquiry_doc": {
+    "status": "success",
+    "message_id": 10335472,
+    "message_wamid": "wamid.HBgMOTE5ODc2NTQzMjEwFQIAERgSRjcwQjE2MUVFOERFOTgxQTYzAA=="
+  },
+  "quotation_inquiry_no_doc": {
+    "status": "success",
+    "message_id": 10335475,
+    "message_wamid": null
+  },
+  "payment_request": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "payment_request_fallback": {
+    "status": "error",
+    "message": "Invalid template"
+  }
+}

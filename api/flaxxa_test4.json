@@ -1,0 +1,15 @@
+{
+  "payment_index_int": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "payment_index_int_enUS": {
+    "status": "error",
+    "message": "Invalid template"
+  },
+  "payment_link": {
+    "status": "success",
+    "message_id": 10335483,
+    "message_wamid": null
+  }
+}

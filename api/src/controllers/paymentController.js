@@ -500,7 +500,7 @@ const createPaymentLink = async (req, res, next) => {
 
             const variables = [order.customerId.name, order.orderNumber, order.amountDue, paymentLink.short_url];
             
-            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
+            waResult = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
             if (!waResult.success) {
                 logger.error(`[Payment Link WhatsApp] Failed: ${waResult.error}`);
             }
@@ -546,7 +546,7 @@ const sharePaymentLinkWhatsApp = async (req, res, next) => {
         }
 
         const variables = [order.customerId.name, order.orderNumber, order.amountDue, order.paymentLinkUrl];
-        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_request', variables);
+        const response = await sendWhatsAppTemplate(order.customerId.phone, 'payment_link', variables);
 
         if (!response?.success) {
             return res.status(500).json({ success: false, message: response?.error || 'WhatsApp sending failed', error: response?.error });
