@@ -72,17 +72,12 @@ const webhookController = {
             }
 
             const event = JSON.parse(body);
-            console.log('Razorpay Webhook Event:', event.event);
 
             switch (event.event) {
 
                 // ── Payment Captured (success) ─────────────────────────────
                 case 'payment.captured': {
                     const payment = event.payload.payment.entity;
-
-                    console.log('Payment captured:', payment.id);
-                    console.log('Amount (paise):', payment.amount);
-                    console.log('Razorpay Order ID:', payment.order_id);
 
                     const amount      = payment.amount / 100; // convert paise → rupees
                     const notes       = payment.notes || {};
@@ -95,7 +90,6 @@ const webhookController = {
                         razorpayPaymentId: payment.id,
                     });
                     if (alreadyRecorded) {
-                        console.log('Payment already recorded, skipping:', payment.id);
                         break;
                     }
 
@@ -139,7 +133,6 @@ const webhookController = {
                         console.error('[Webhook WhatsApp] payment_success failed:', waErr.message);
                     }
 
-                    console.log(`Payment ${transactionId} recorded successfully for ₹${amount}`);
                     break;
                 }
 
@@ -172,14 +165,12 @@ const webhookController = {
                         notes:             `Failed: ${payment.error_description || 'Unknown reason'}`,
                     });
 
-                    console.log(`Failed payment ${transactionId} logged`);
                     break;
                 }
 
                 // ── Refund Processed ───────────────────────────────────────
                 case 'refund.processed': {
                     const refund = event.payload.refund.entity;
-                    console.log('Refund processed:', refund.id, '| Payment:', refund.payment_id);
 
                     await Payment.findOneAndUpdate(
                         { razorpayPaymentId: refund.payment_id },
@@ -189,7 +180,7 @@ const webhookController = {
                 }
 
                 default:
-                    console.log('Unhandled Razorpay event:', event.event);
+                    break;
             }
 
             return res.status(200).send('Webhook processed');

@@ -1,6 +1,0 @@
-﻿[dotenv@17.3.1] injecting env (20) from .env -- tip: ≡ƒñû agentic secret storage: https://dotenvx.com/as2
-payload res: {
-  status: 'success',
-  message_id: 10052888,
-  message_wamid: 'wamid.HBgMOTE5ODc2NTQzMjEwFQIAERgSQkYzMDlFMDU5QTJBQzg5QjM4AA=='
-}

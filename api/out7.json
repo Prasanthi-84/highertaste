@@ -1,6 +1,0 @@
-﻿[dotenv@17.3.1] injecting env (20) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
-payload res: {
-  status: 'success',
-  message_id: 10052906,
-  message_wamid: 'wamid.HBgMOTE5ODc2NTQzMjEwFQIAERgSNkU0RTE0OTBGNzg0OTU1NzBBAA=='
-}

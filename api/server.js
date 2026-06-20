@@ -127,13 +127,11 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-    console.log(`🟢 Kitchen dashboard connected: ${socket.id}`);
     
     // Optional: could join specific specific department rooms here
     // socket.on('join_department', (dept) => socket.join(dept));
 
     socket.on('disconnect', () => {
-        console.log(`🔴 Kitchen dashboard disconnected: ${socket.id}`);
     });
 });
 

@@ -1,3 +1,0 @@
-{
-  "message": "The POST method is not supported for route api/v1/getTemplates. Supported methods: GET, HEAD."
-}

@@ -1,6 +1,0 @@
-﻿client/src/pages/order-details.tsx(316,24): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
-client/src/pages/order-details.tsx(617,33): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
-client/src/pages/order-details.tsx(628,106): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
-client/src/pages/order-details.tsx(629,47): error TS2339: Property 'paymentLinkExpiresAt' does not exist on type 'Order'.
-client/src/pages/order-details.tsx(631,69): error TS2339: Property 'paymentLinkExpiresAt' does not exist on type 'Order'.
-client/src/pages/order-details.tsx(640,78): error TS2339: Property 'paymentLinkUrl' does not exist on type 'Order'.
